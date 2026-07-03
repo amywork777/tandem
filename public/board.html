@@ -64,6 +64,12 @@
   }
   h2.md .count.clear { color: var(--green); }
   hr.md { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+  .add-task {
+    display: block; width: 100%; text-align: left; margin: 6px 0 0;
+    background: none; border: 1px dashed var(--border); color: var(--subtext);
+    padding: 7px 12px; border-radius: 10px; font-size: 13px; cursor: pointer;
+  }
+  .add-task:hover { color: var(--text); border-color: var(--accent); }
   h1.md { font-size: 20px; font-weight: 700; margin: 8px 0 12px; }
   p.md { color: var(--subtext); font-size: 12.5px; margin: 4px 0; opacity: 0.8; }
   .item {
@@ -556,6 +562,15 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
     // inside the card and checks/sinks with it. File order = chronology.
     const CONT_RE = /^\s*(→ (?:🤖|❓|💬)|⚠️ HOLD)\s/u;
     let skipUntil = -1;
+    // "+ add task" renders at the bottom of each section and inserts a new
+    // item at the section's end in the file.
+    let pendingAdd = null;
+    const flushAdd = () => {
+      if (pendingAdd) {
+        frag.append(pendingAdd);
+        pendingAdd = null;
+      }
+    };
     doc.hidden = rawMode;
     $('empty').hidden = true;
     $('hint').hidden = false;
@@ -673,6 +688,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       const h = line.match(/^(#{1,3}) (.*)$/);
       if (h) {
         flushChecked();
+        flushAdd();
         const el = document.createElement(h[1].length === 1 ? 'h1' : 'h2');
         el.className = 'md';
         const text = document.createElement('span');
@@ -684,8 +700,10 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         if (h[1].length > 1) {
           let open = 0;
           let total = 0;
+          let lastNonBlank = index;
           for (let j = index + 1; j < lines.length; j++) {
             if (/^#{1,3} /.test(lines[j])) break;
+            if (lines[j].trim() !== '') lastNonBlank = j;
             const it = lines[j].match(/^\s*- \[([ xX])\]/);
             if (it) {
               total++;
@@ -699,6 +717,18 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
             count.textContent = open ? `${open} open` : 'all done ✓';
             el.append(count);
           }
+          const addMeta = { index: lastNonBlank, original: lines[lastNonBlank] };
+          const addBtn = document.createElement('button');
+          addBtn.className = 'add-task';
+          addBtn.textContent = '+ add task';
+          addBtn.addEventListener('click', async () => {
+            const at = await spliceLines(addMeta, 0, ['- [ ]  🔨 ']);
+            if (at !== -1) {
+              lastModified = 0;
+              await refresh(true, at);
+            }
+          });
+          pendingAdd = addBtn;
         }
         frag.append(el);
         return;
@@ -724,6 +754,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       }
     });
     flushChecked();
+    flushAdd();
     doc.replaceChildren(frag);
   };
 
