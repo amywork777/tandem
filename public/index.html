@@ -53,8 +53,17 @@
   ol.steps b { display: block; }
   ol.steps span { color: var(--subtext); font-size: 13.5px; }
   .board-demo {
+    position: relative;
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    padding: 14px; font-size: 13px; display: grid; gap: 6px; overflow-x: auto;
+    padding: 42px 14px 14px; font-size: 13px; display: grid; gap: 6px; overflow-x: auto;
+  }
+  .board-demo::before {
+    content: "● ● ●"; position: absolute; top: 11px; left: 14px;
+    color: var(--surface2); font-size: 9px; letter-spacing: 3px;
+  }
+  .board-demo::after {
+    content: "tandem — board"; position: absolute; top: 8px; left: 0; right: 0;
+    text-align: center; color: var(--subtext); font-size: 11px;
   }
   .demo-item {
     display: flex; gap: 10px; align-items: flex-start;

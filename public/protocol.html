@@ -27,6 +27,9 @@
   th { background: var(--surface); color: var(--text); font-weight: 600; }
   td { color: var(--subtext); }
   td code { white-space: nowrap; }
+  code.exa { box-shadow: inset 3px 0 0 #e8b23d; padding-left: 9px; }
+  code.exq { box-shadow: inset 3px 0 0 #e06060; padding-left: 9px; }
+  code.exf { box-shadow: inset 3px 0 0 #a495ff; padding-left: 9px; }
   nav { margin-bottom: 28px; font-size: 13px; }
 </style>
 </head>
@@ -56,11 +59,11 @@
   <h2>Markers (exact grammar)</h2>
   <div class="table-wrap"><table>
     <tr><th>Marker</th><th>Meaning</th></tr>
-    <tr><td><code>→ 🤖 Name: in progress — &lt;what&gt;</code></td><td>Claim + lock. One agent per item.</td></tr>
-    <tr><td><code>→ 🤖 Name: done — &lt;what, commit/link&gt;</code></td><td>Work finished, awaiting human verification.</td></tr>
-    <tr><td><code>→ ❓ Name: &lt;question&gt;</code></td><td>Blocked on the human. Rendered red; humans scan for these.</td></tr>
-    <tr><td><code>⚠️ HOLD Name &lt;file or topic&gt;</code></td><td>Editing shared code — other agents keep off until the marker is edited to done/removed.</td></tr>
-    <tr><td><code>→ 💬 &lt;note&gt;</code></td><td>Human feedback on an item — an instruction to the agents. The board adds one via the 💬 button.</td></tr>
+    <tr><td><code class="exa">→ 🤖 Name: in progress — &lt;what&gt;</code></td><td>Claim + lock. One agent per item.</td></tr>
+    <tr><td><code class="exa">→ 🤖 Name: done — &lt;what, commit/link&gt;</code></td><td>Work finished, awaiting human verification.</td></tr>
+    <tr><td><code class="exq">→ ❓ Name: &lt;question&gt;</code></td><td>Blocked on the human. Rendered red; humans scan for these.</td></tr>
+    <tr><td><code class="exq">⚠️ HOLD Name &lt;file or topic&gt;</code></td><td>Editing shared code — other agents keep off until the marker is edited to done/removed.</td></tr>
+    <tr><td><code class="exf">→ 💬 &lt;note&gt;</code></td><td>Human feedback on an item — an instruction to the agents. The board adds one via the 💬 button.</td></tr>
   </table></div>
 
   <h2>The file set</h2>
