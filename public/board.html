@@ -113,6 +113,9 @@
   #sibs { display: flex; gap: 6px; }
   #sibs .sib { padding: 4px 10px; font-size: 12px; }
   #sibs .sib.active { outline: 1.5px solid var(--accent); }
+  #sibs .sib .x { opacity: 0; margin-left: 7px; color: var(--subtext); }
+  #sibs .sib:hover .x { opacity: 0.7; }
+  #sibs .sib .x:hover { color: var(--red); }
   #help {
     position: fixed; top: 53px; right: 0; bottom: 0; width: 320px; overflow-y: auto;
     background: var(--surface); border-left: 1px solid var(--border);
@@ -132,15 +135,15 @@
   <button id="helpBtn" class="secondary" title="Protocol rules">?</button>
   <button id="rawBtn" class="secondary" hidden>Raw</button>
   <button id="new" class="secondary">New checklist</button>
-  <button id="open">Open project folder</button>
+  <button id="open">Open .md file(s)</button>
 </header>
 <main>
   <div id="empty">
     <h2>Open a checklist</h2>
     <p><strong>tandem</strong> is a shared board between you and your AI agents: one markdown
-    file on your machine that everyone reads and writes. Open your project folder — every .md
-    inside becomes a tab up top — or click <em>New checklist</em> to start a fresh project
-    folder from the templates.</p>
+    file on your machine that everyone reads and writes. Open one or more checklist .md files —
+    every file you open becomes a tab up top, and the tabs stick around between visits — or
+    click <em>New checklist</em> to start a fresh project from the templates.</p>
     <p>Everything is editable in place — text edits, checkbox clicks, new items — and every
     change is written straight back into the markdown, which stays the single source of truth
     for you and every agent. The page re-reads the file every couple of seconds (paused while
@@ -184,7 +187,7 @@
   let lastInputAt = 0;
   let rawMode = false;
 
-  if (!window.showDirectoryPicker) {
+  if (!window.showOpenFilePicker) {
     $('empty').innerHTML =
       '<h2>Browser not supported</h2><p>The board needs the File System Access API — ' +
       'open this page in a Chromium browser (Chrome, Edge, Arc).</p>';
@@ -485,49 +488,54 @@
     rawT = setTimeout(() => void writeFileText($('raw').value), 900);
   });
 
-  // Every .md in the project folder becomes a switcher tab, canonical four first.
-  let dirHandle = null;
-  const CANON = ['checklist.md', 'decisions.md', 'archive.md', 'agents.md'];
-  const renderSibs = async () => {
+  // Tabs: every .md the user has opened, persisted per browser. Click to
+  // switch (re-grants permission if needed), × to forget the tab.
+  let tabs = [];
+  const sameEntry = async (a, b) => a === b || (await a.isSameEntry(b));
+  const addTab = async (h) => {
+    for (const t of tabs) if (await sameEntry(t, h)) return;
+    tabs.push(h);
+    void idbPut('tabs', tabs);
+  };
+  const removeTab = (h) => {
+    tabs = tabs.filter((t) => t !== h);
+    void idbPut('tabs', tabs);
+    void renderTabs();
+  };
+  const renderTabs = async () => {
     const el = $('sibs');
     el.replaceChildren();
-    if (!dirHandle) return;
-    const names = [];
-    try {
-      for await (const entry of dirHandle.values()) {
-        if (entry.kind === 'file' && entry.name.endsWith('.md')) names.push(entry.name);
-      }
-    } catch { return; }
-    names.sort((a, b) => {
-      const ia = CANON.indexOf(a);
-      const ib = CANON.indexOf(b);
-      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
-    });
-    for (const name of names.slice(0, 8)) {
+    for (const t of tabs) {
       const b = document.createElement('button');
-      b.className = 'secondary sib' + (handle && handle.name === name ? ' active' : '');
-      b.textContent = name.replace(/\.md$/, '');
-      b.addEventListener('click', async () => {
-        await connect(await dirHandle.getFileHandle(name), dirHandle);
+      const active = handle && (await sameEntry(t, handle));
+      b.className = 'secondary sib' + (active ? ' active' : '');
+      const label = document.createElement('span');
+      label.textContent = t.name.replace(/\.md$/, '');
+      const x = document.createElement('span');
+      x.className = 'x';
+      x.textContent = '×';
+      x.title = 'Remove tab (the file stays on disk)';
+      x.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeTab(t);
       });
+      b.append(label, x);
+      b.addEventListener('click', () => void connect(t));
       el.append(b);
     }
   };
 
-  const connect = async (h, dir = null) => {
+  const connect = async (h) => {
     const perm = await h.requestPermission({ mode: 'readwrite' });
     if (perm !== 'granted') return false;
     handle = h;
-    if (dir) dirHandle = dir;
     lastModified = 0;
     await refresh(true);
     $('rawBtn').hidden = false;
-    $('open').textContent = 'Open another folder';
-    if (dirHandle) {
-      void idbPut('dir', dirHandle);
-      void idbPut('lastFile', h.name);
-    }
-    void renderSibs();
+    $('open').textContent = 'Open more .md files';
+    await addTab(h);
+    void idbPut('lastFile', h.name);
+    void renderTabs();
     return true;
   };
 
@@ -599,70 +607,49 @@ whole file before touching anything.
     } catch { return; /* cancelled */ }
     const date = new Date().toISOString().slice(0, 10);
     const fill = (t) => t.replaceAll('{{NAME}}', name).replaceAll('{{DATE}}', date);
+    const created = [];
     for (const [f, body] of Object.entries(TEMPLATES)) {
       const fh = await dir.getFileHandle(f, { create: true });
       const w = await fh.createWritable();
       await w.write(fill(body));
       await w.close();
+      created.push(fh);
     }
-    await connect(await dir.getFileHandle('checklist.md'), dir);
+    for (const fh of created) await addTab(fh);
+    await connect(created[0]);
   });
 
   $('helpBtn').addEventListener('click', () => {
     $('help').hidden = !$('help').hidden;
   });
 
-  // One button, two modes: re-grant access to the remembered folder, or pick one.
-  let reconnectDir = null;
-  const openFolder = async () => {
-    let dir;
-    try {
-      dir = await window.showDirectoryPicker({ mode: 'readwrite' });
-    } catch { return; /* cancelled */ }
-    let fh = null;
-    try {
-      fh = await dir.getFileHandle('checklist.md');
-    } catch { /* no canonical checklist — fall through to first .md */ }
-    if (!fh) {
-      for await (const entry of dir.values()) {
-        if (entry.kind === 'file' && entry.name.endsWith('.md')) { fh = entry; break; }
-      }
-    }
-    if (!fh) { setStatus('no .md files in that folder'); return; }
-    await connect(fh, dir);
-  };
   $('open').addEventListener('click', async () => {
-    if (reconnectDir) {
-      const dir = reconnectDir;
-      reconnectDir = null;
-      if ((await dir.requestPermission({ mode: 'readwrite' })) === 'granted') {
-        dirHandle = dir;
-        const name = (await idbGet('lastFile')) || 'checklist.md';
-        try {
-          if (await connect(await dir.getFileHandle(name), dir)) return;
-        } catch { /* file gone — fall through to picker */ }
-      }
-      $('open').textContent = 'Open project folder';
-      return;
-    }
-    await openFolder();
+    try {
+      const picked = await window.showOpenFilePicker({
+        multiple: true,
+        types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
+      });
+      for (const h of picked) await addTab(h);
+      if (picked.length) await connect(picked[0]);
+      else void renderTabs();
+    } catch { /* user cancelled */ }
   });
 
   // Auto-refresh so the AIs' edits appear without touching anything.
   setInterval(() => { void refresh().catch(() => {}); }, 2000);
 
-  // Reconnect the previous folder (browser requires one click to re-grant).
-  idbGet('dir').then(async (dir) => {
-    if (!dir) return;
-    if ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted') {
-      dirHandle = dir;
-      const name = (await idbGet('lastFile')) || 'checklist.md';
-      try {
-        await connect(await dir.getFileHandle(name), dir);
-      } catch { /* file gone; user picks manually */ }
+  // Restore the tab strip; auto-open the last file if permission survived,
+  // otherwise one click on a tab re-grants it.
+  idbGet('tabs').then(async (saved) => {
+    if (!saved || !saved.length) return;
+    tabs = saved;
+    const last = await idbGet('lastFile');
+    const target = tabs.find((t) => t.name === last) || tabs[0];
+    if ((await target.queryPermission({ mode: 'readwrite' })) === 'granted') {
+      void connect(target);
     } else {
-      reconnectDir = dir;
-      $('open').textContent = 'Reconnect last folder';
+      void renderTabs();
+      setStatus('click a tab to reconnect');
     }
   });
 })();
