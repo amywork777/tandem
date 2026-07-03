@@ -27,6 +27,9 @@ that safe and legible.
 
 ## The file set
 
+Only `checklist.md` is required — the board opens any lone .md. The rest are conventions that
+pay off as a project grows; agents work with whichever files actually exist.
+
 | File | Holds |
 |---|---|
 | `checklist.md` | Live work only, three sections: **Verify** (done, awaiting human check) · **Discuss** (needs a human/team decision) · **Later** (parked). |

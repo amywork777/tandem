@@ -241,11 +241,12 @@
     <button id="copyPaste" class="copy-btn">Copy</button>
     <pre id="pasteBlock">You&#x27;re joining a &quot;tandem&quot; board: a checklist in ONE markdown file that a human and AI agents share. The human is in charge. Follow these rules exactly.
 
-THE FILES (all in the project folder):
+THE FILES — only checklist.md is required; a fuller project may keep siblings next to it:
 - checklist.md — the board. Three sections: &quot;1 · Verify&quot; = finished work waiting for the human to check. &quot;2 · Discuss&quot; = questions for the human. &quot;3 · Later&quot; = parked.
-- decisions.md — what was decided and why (numbered).
-- archive.md — history of finished work.
-- agents.md — these rules, project-specific copy.
+- decisions.md (if present) — what was decided and why (numbered).
+- archive.md (if present) — history of finished work.
+- agents.md (if present) — these rules, project-specific copy.
+Don&#x27;t go looking for files that don&#x27;t exist — work with what&#x27;s there.
 
 THE GOLDEN RULES:
 1. Only the human checks boxes or crosses things out. Anything checked or crossed is FINAL — never bring it back or redo it. A checkmark with no comment means &quot;accepted as-is&quot; — don&#x27;t wait for feedback.
@@ -264,7 +265,7 @@ SAVING THE FILE (important — it changes under you; the human&#x27;s browser an
 - Build your new version from that fresh read, save to a temp file, rename it over the original.
 - Never save the file from memory — you&#x27;d wipe the human&#x27;s checkmarks.
 
-HOUSEKEEPING: new decisions (and the why) go in decisions.md. Keep the checklist short — move finished detail to archive.md.
+HOUSEKEEPING: if the project keeps a decisions.md, new decisions (and the why) go there. If it keeps an archive.md, move finished detail there so the checklist stays short.
 
 YOUR NAME: the human&#x27;s message tells you who you are (e.g. &quot;you&#x27;re Codex&quot;). Sign every marker with it, and find your role by it on the Rules: line. Names are unique — if several copies of the same agent are running they get numbered names (Codex-1, Codex-2); never assume a similar name&#x27;s markers are yours.
 
