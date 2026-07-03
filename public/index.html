@@ -97,6 +97,17 @@
   }
   .dpill.dyou { background: #a495ff; }
   .dpill.dattn { background: var(--red); color: #fff; }
+  .demo-rules {
+    color: var(--subtext); font-size: 12px; padding: 2px 2px 8px;
+    border-bottom: 1px solid var(--border); margin-bottom: 4px;
+  }
+  .demo-rules .edit-hint { font-style: italic; opacity: 0.8; }
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 12px;
+    padding: 14px 16px; margin-top: 14px; font-size: 13.5px; color: var(--subtext);
+  }
+  .callout b { color: var(--text); }
   .cap {
     margin-left: auto; flex-shrink: 0; align-self: center; padding-left: 12px;
     max-width: 150px; text-align: right;
@@ -164,6 +175,9 @@
 
   <h2>The board, at a glance</h2>
   <div class="board-demo">
+    <div class="demo-rules">roles: <span class="dpill" style="background:#e8b23d">🤖 Fable</span> planner
+      · <span class="dpill" style="background:#45c4f5">🤖 Codex</span> coder
+      · only you check the boxes <span class="edit-hint">— plain text, edit it anytime</span></div>
     <div class="demo-item"><div class="demo-box"></div>
       <div>Fix the login redirect loop
         <span class="m-done"><span class="dpill" style="background:#e8b23d">🤖 Fable</span> done — stale cookie guard, commit 41c9a2</span>
@@ -203,6 +217,10 @@
       <span>Updates appear on the board by themselves, and the whole history stays in one .md
       file you can open anywhere.</span></div></li>
   </ol>
+  <div class="callout"><b>You pick the roles.</b> The <code>Rules:</code> line at the top of
+  every checklist says who does what — e.g. <code>roles: Fable = planner · Codex = coder</code>.
+  It's plain text: rewrite it on the board anytime, and the agents follow it from their next
+  read.</div>
 
   <h2>For your AI</h2>
   <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any
