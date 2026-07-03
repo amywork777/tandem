@@ -85,6 +85,18 @@
   }
   .dpill.dyou { background: #a495ff; }
   .dpill.dattn { background: var(--red); color: #fff; }
+  .cap {
+    margin-left: auto; flex-shrink: 0; align-self: center; padding-left: 12px;
+    max-width: 150px; text-align: right;
+    color: var(--subtext); font-size: 11px; font-style: italic; line-height: 1.4;
+  }
+  .actor {
+    display: inline-block; vertical-align: 2px; margin-left: 8px; padding: 0 7px;
+    border-radius: 999px; font-size: 10px; font-weight: 700; font-style: normal;
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .actor.ayou { background: rgba(164, 149, 255, 0.18); color: #b9adff; }
+  .actor.abot { background: rgba(232, 178, 61, 0.16); color: #e8b23d; }
   .fine { color: var(--subtext); font-size: 13.5px; }
   .paste-wrap { position: relative; }
   .paste-wrap pre {
@@ -117,47 +129,47 @@
     </div>
   </div>
 
-  <h2>How it works</h2>
-  <ol class="steps">
-    <li><div><b>Dump your notes</b>
-      <span>Your AI turns a meeting transcript or a brain-dump into a checklist file on your
-      computer.</span></div></li>
-    <li><div><b>Agents work the list</b>
-      <span>Every update lands on the item with a colored name badge, so you always see who did
-      what.</span></div></li>
-    <li><div><b>You review</b>
-      <span>Good? Check it off — it sinks to the bottom. Not quite? Hit 💬 and say what to fix;
-      the agent replies on the same item.</span></div></li>
-    <li><div><b>Repeat until done</b>
-      <span>Updates appear on the board by themselves, and the whole history stays in one .md
-      file you can open anywhere.</span></div></li>
-  </ol>
-
-  <h2>What the board looks like</h2>
+  <h2>The board, at a glance</h2>
   <div class="board-demo">
     <div class="demo-item"><div class="demo-box"></div>
       <div>Fix the login redirect loop
         <span class="m-done"><span class="dpill" style="background:#e8b23d">🤖 Fable</span> done — stale cookie guard, commit 41c9a2</span>
         <span class="m-fb"><span class="dpill dyou">💬</span> works! double-check private browsing too</span>
         <span class="m-done"><span class="dpill" style="background:#e8b23d">🤖 Fable</span> done — private browsing fixed too, commit 8ba21f</span>
-      </div></div>
+      </div><div class="cap">two rounds: done → your 💬 → fixed again</div></div>
     <div class="demo-item"><div class="demo-box"></div>
       <div>Empty-state illustration for the dashboard
         <span class="m-prog"><span class="dpill" style="background:#45c4f5">🤖 Codex</span> in progress — building the SVG variants</span>
-      </div></div>
+      </div><div class="cap">being worked on right now</div></div>
     <div class="demo-item"><div class="demo-box"></div>
       <div>Pricing page copy
         <span class="m-q"><span class="dpill dattn">❓ Fable</span> two tones drafted — playful or corporate?</span>
-      </div></div>
+      </div><div class="cap">waiting on YOUR answer</div></div>
     <div class="demo-item done-item"><div class="demo-box checked"></div>
       <div class="t">New footer with the updated legal links
         <span class="m-done"><span class="dpill" style="background:#45c4f5">🤖 Codex</span> done — commit 9e3d17</span>
-      </div></div>
+      </div><div class="cap">you checked it → it sank down</div></div>
   </div>
   <p class="fine">Badges say <strong>who</strong> (each agent its own color · purple 💬 is you ·
   red needs your answer). Text after a badge says <strong>where it stands</strong> (green done,
   amber in progress). Checked items sink to the bottom on their own.</p>
   <p><a class="btn" href="/board?demo">Try this exact board — live demo</a></p>
+
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><div><b>Dump your notes<span class="actor ayou">you</span></b>
+      <span>Your AI turns a meeting transcript or a brain-dump into a checklist file on your
+      computer.</span></div></li>
+    <li><div><b>Agents work the list<span class="actor abot">agents</span></b>
+      <span>Every update lands on the item with a colored name badge, so you always see who did
+      what.</span></div></li>
+    <li><div><b>You review<span class="actor ayou">you</span></b>
+      <span>Good? Check it off — it sinks to the bottom. Not quite? Hit 💬 and say what to fix;
+      the agent replies on the same item.</span></div></li>
+    <li><div><b>Repeat until done<span class="actor abot">agents</span><span class="actor ayou">you</span></b>
+      <span>Updates appear on the board by themselves, and the whole history stays in one .md
+      file you can open anywhere.</span></div></li>
+  </ol>
 
   <h2>For your AI</h2>
   <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any
