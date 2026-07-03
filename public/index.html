@@ -76,6 +76,19 @@
   .m-prog { color: var(--amber); }
   .m-q { color: var(--red); }
   .fine { color: var(--subtext); font-size: 13.5px; }
+  .paste-wrap { position: relative; }
+  .paste-wrap pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 18px 16px; margin: 0; overflow-x: auto; white-space: pre-wrap;
+    font: 12px/1.55 ui-monospace, Menlo, monospace; color: var(--subtext);
+    max-height: 340px; overflow-y: auto;
+  }
+  .copy-btn {
+    position: absolute; top: 10px; right: 10px; z-index: 2;
+    background: var(--accent); color: #fff; border: 0; cursor: pointer;
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+  }
+  .copy-btn.copied { background: var(--green); }
   footer { margin-top: 64px; color: var(--subtext); font-size: 12.5px; border-top: 1px solid var(--border); padding-top: 18px; }
   @media (prefers-color-scheme: light) { /* deliberate single-theme: the board is dark, the product is dark */ }
 </style>
@@ -129,9 +142,56 @@
   agent: <em>"read agents.md in this folder first."</em> Templates, the full protocol, and a
   Claude Code skill live in the repo.</p>
 
+  <h2 id="paste">Or just paste this into your agent(s)</h2>
+  <p class="fine">No setup, no files — copy the block below into any agent (Claude, Codex,
+  anything) and it knows how to play. Works as a system prompt, a first message, or the top of
+  an AGENTS.md.</p>
+  <div class="paste-wrap">
+    <button id="copyPaste" class="copy-btn">Copy</button>
+    <pre id="pasteBlock">You are joining a tandem board: a shared checklist between a human and one or more AI agents. One markdown file is the single source of truth. Follow these rules exactly.
+
+THE FILES (in the project folder I&#x27;ll point you at):
+- checklist.md — the board. Live work only, three sections: &quot;1 · Verify&quot; (done, awaiting the human&#x27;s check), &quot;2 · Discuss&quot; (needs a human decision), &quot;3 · Later&quot; (parked).
+- decisions.md — every decision, numbered, append-only, always with the WHY.
+- archive.md — append-only history; move finished detail here so the checklist stays short.
+- agents.md — these instructions (project-specific copy).
+
+OWNERSHIP:
+- Only the human checks boxes ([x]) or crosses items out. A checked or crossed item is SETTLED — never resurface, re-open, or re-add it, ever.
+- You only append. Respond to an item by appending a marker to its line (or a new line directly under it) — never rewrite the human&#x27;s words.
+- Inline notes addressed to you (e.g. &quot;AMY: fix the wording&quot;) are work orders.
+
+MARKERS (exact grammar — use your own name):
+- Claim + lock (one agent per item):  → 🤖 &lt;YourName&gt;: in progress — &lt;what&gt;
+- Finished, awaiting human check:     → 🤖 &lt;YourName&gt;: done — &lt;what, commit/link&gt;
+- Blocked on the human:               → ❓ &lt;YourName&gt;: &lt;question&gt;
+- Editing shared code:                ⚠️ HOLD &lt;YourName&gt; &lt;file or topic&gt;   (edit it away when done; respect others&#x27; HOLDs)
+
+DIVISION OF LABOR: architectural/risky items go to the stronger agent; self-contained items to the other. The in-progress marker IS the claim — no separate assignment step.
+
+WRITE SAFETY (critical — the file is HOT; a browser board and other agents write it while you work):
+- Re-read the file immediately before EVERY write.
+- Write atomically: build the new content from that fresh read, write to a temp file, rename over the original. Never use an edit tool whose read snapshot may be stale.
+- Never regenerate the file from memory — the human&#x27;s checkbox states are sacred.
+
+HOUSEKEEPING: decisions (with the why) go to decisions.md, numbered. When the human checks a Verify item, move its detail to archive.md. Outward status (Linear/Notion/Slack) is generated FROM the checklist when asked — never maintained in parallel.
+
+Confirm you&#x27;ve understood, then read checklist.md and report: unchecked Verify items, any ❓ questions, and unclaimed work.</pre>
+  </div>
+
   <footer>
     tandem · local-first, no accounts, no tracking · <a href="/protocol">protocol</a>
   </footer>
 </main>
+
+<script>
+  document.getElementById('copyPaste').addEventListener('click', async () => {
+    const btn = document.getElementById('copyPaste');
+    await navigator.clipboard.writeText(document.getElementById('pasteBlock').textContent);
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1400);
+  });
+</script>
 </body>
 </html>
