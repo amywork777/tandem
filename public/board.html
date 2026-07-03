@@ -88,6 +88,18 @@
   .item.ready { border-left: 3px solid var(--green); }
   .item.ask { border-left: 3px solid var(--red); }
   .item .editable:hover { background: var(--surface2); cursor: text; }
+  .item.flash { outline: 2px solid var(--accent); }
+  .item .del {
+    flex-shrink: 0; background: none; border: 0; padding: 0 4px;
+    color: var(--subtext); font-size: 13px; cursor: pointer; opacity: 0;
+  }
+  .item:hover .del { opacity: 0.6; }
+  .item .del:hover { opacity: 1; color: var(--red); }
+  .item .del.armed { opacity: 1; color: var(--red); font-size: 11.5px; font-weight: 700; }
+  #agents .strip-label.sub { margin-top: 6px; border-top: 1px solid var(--border); padding-top: 7px; }
+  #agents .lane.recent { cursor: pointer; }
+  #agents .lane.recent:hover .what { color: var(--text); }
+  #agents .recent-t { flex-shrink: 0; min-width: 64px; color: var(--subtext); font-weight: 600; }
   #demoBanner {
     background: color-mix(in srgb, var(--accent) 16%, var(--bg));
     border-bottom: 1px solid var(--accent);
@@ -513,9 +525,14 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       else if (/^🤖 \S+: done/u.test(last)) toVerify++;
     }
     let lastItem = '';
-    for (const line of lines) {
+    let lastItemIdx = -1;
+    const events = [];
+    for (const [li, line] of lines.entries()) {
       const im = line.match(/^\s*- \[[ xX]\]\s*(.*)$/);
-      if (im) lastItem = im[1].split('→')[0].replace(/✅|⚠️|🔨|🔴/gu, '').trim();
+      if (im) {
+        lastItem = im[1].split('→')[0].replace(/✅|⚠️|🔨|🔴/gu, '').trim();
+        lastItemIdx = li;
+      }
       const m = line.match(/^\s*- \[[ xX]\]\s*(.*?)\s*→ 🤖 (\S+): in progress/);
       if (m) add(m[2], m[1].replace(/✅|⚠️|🔨|🔴/gu, '').trim());
       else {
@@ -528,6 +545,14 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       for (const t of line.matchAll(/(?:🤖|HOLD) (\S+)[:\s][^→]*?· (\d{1,2}):(\d{2})/gu)) {
         const mins = minutesAgo(+t[2], +t[3]);
         if (!seen.has(t[1]) || mins < seen.get(t[1])) seen.set(t[1], mins);
+      }
+      for (const e of line.matchAll(/→ (🤖 [^→]*?· (\d{1,2}):(\d{2}))/gu)) {
+        events.push({
+          mins: minutesAgo(+e[2], +e[3]),
+          text: e[1],
+          idx: lastItemIdx,
+          item: lastItem,
+        });
       }
     }
     const roles = new Map();
@@ -567,6 +592,21 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
     const youBits = [];
     if (toVerify) youBits.push(`${toVerify} to verify (green edge)`);
     if (questions) youBits.push(`${questions} question${questions > 1 ? 's' : ''} (red edge)`);
+    events.sort((a, b) => a.mins - b.mins);
+    const recentRows = !events.length
+      ? ''
+      : `<div class="strip-label sub">Latest updates — click to jump</div>` +
+        events
+          .slice(0, 3)
+          .map((e) => {
+            const t = e.mins <= 1 ? 'now' : e.mins < 60 ? `${e.mins}m ago` : `${Math.round(e.mins / 60)}h ago`;
+            const snip = e.text.length > 80 ? e.text.slice(0, 80) + '…' : e.text;
+            return `<div class="lane recent" data-idx="${e.idx}" title="Jump to this item">
+        <span class="recent-t">🕐 ${t}</span>
+        <span class="what">${escapeHtml(snip)}</span>
+      </div>`;
+          })
+          .join('');
     const youRow = youBits.length
       ? `<div class="lane"><span class="who"><span class="pill you">🧍 you</span></span>` +
         `<span class="what">waiting on you: ${youBits.join(' · ')}</span></div>`
@@ -576,6 +616,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       (ruleLine ? `<button class="edit-roles">✎ edit roles</button>` : '') +
       `</div>` +
       youRow +
+      recentRows +
       (lanes.join('') ||
         '<div class="lane"><span class="what free">no agents yet — name roles on the Rules: line, e.g. roles: Fable = planner · Codex = coder</span></div>') +
       `<div class="legend">☑ your check = accepted, done · ` +
@@ -583,6 +624,15 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       `<span class="g">green = finished, waiting on your check</span> · ` +
       `<span class="a">amber = in progress</span> · ` +
       `<span class="r">red = needs your answer</span></div>`;
+    for (const el of $('agents').querySelectorAll('.lane.recent')) {
+      el.addEventListener('click', () => {
+        const target = document.querySelector(`.item[data-idx="${el.dataset.idx}"]`);
+        if (!target) return;
+        target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        target.classList.add('flash');
+        setTimeout(() => target.classList.remove('flash'), 1600);
+      });
+    }
     const editBtn = $('agents').querySelector('.edit-roles');
     if (editBtn) {
       editBtn.addEventListener('click', () => {
@@ -640,6 +690,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           if (lastMark.startsWith('❓')) row.className += ' ask';
           else if (/^🤖 \S+: done/u.test(lastMark)) row.className += ' ready';
         }
+        row.dataset.idx = index;
         const box = document.createElement('input');
         box.type = 'checkbox';
         box.checked = state !== ' ';
@@ -742,7 +793,26 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           input.focus();
         });
         col.append(fb);
-        row.append(box, col);
+        const del = document.createElement('button');
+        del.className = 'del';
+        del.textContent = '🗑';
+        del.title = 'Delete this task (and its comments)';
+        del.addEventListener('click', async () => {
+          if (!del.classList.contains('armed')) {
+            del.classList.add('armed');
+            del.textContent = 'delete?';
+            setTimeout(() => {
+              del.classList.remove('armed');
+              del.textContent = '🗑';
+            }, 2500);
+            return;
+          }
+          if ((await spliceLines(meta, 1 + contMetas.length, [])) !== -1) {
+            lastModified = 0;
+            await refresh(true);
+          }
+        });
+        row.append(box, col, del);
         if (box.checked) checkedRows.push(row);
         else frag.append(row);
         return;
