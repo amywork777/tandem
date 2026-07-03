@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>CMF Todo</title>
+<title>tandem — board</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
@@ -101,27 +101,45 @@
     outline: none; resize: vertical;
   }
   .hint { color: var(--subtext); font-size: 11.5px; margin: 14px 4px 0; }
+  a { color: var(--accent); }
+  .who.third { color: var(--green); }
+  #agents .who { width: auto; min-width: 64px; }
+  #sibs { display: flex; gap: 6px; }
+  #sibs .sib { padding: 4px 10px; font-size: 12px; }
+  #sibs .sib.active { outline: 1.5px solid var(--accent); }
+  #help {
+    position: fixed; top: 53px; right: 0; bottom: 0; width: 320px; overflow-y: auto;
+    background: var(--surface); border-left: 1px solid var(--border);
+    padding: 16px 18px; font-size: 12.5px; z-index: 20;
+  }
+  #help h3 { margin: 0 0 10px; font-size: 13px; }
+  #help p, #help li { color: var(--subtext); }
+  #help code { color: var(--text); font-size: 11.5px; }
 </style>
 </head>
 <body>
 <header>
-  <h1>CMF Todo</h1>
+  <h1 id="title">tandem — board</h1>
   <span id="saved">saved</span>
   <span id="status">no file</span>
+  <span id="sibs"></span>
+  <button id="helpBtn" class="secondary" title="Protocol rules">?</button>
   <button id="rawBtn" class="secondary" hidden>Raw</button>
+  <button id="new" class="secondary">New checklist</button>
   <button id="open">Open checklist .md</button>
 </header>
 <main>
   <div id="empty">
-    <h2>Open the checklist</h2>
-    <p>Pick <code>~/Downloads/cmf-july-2-handoff-checklist.md</code> (Jul 2 handoff
-    follow-ups) or <code>~/Downloads/cmf-july-1-checklist.md</code> (in-flight items).
-    Everything is editable
-    in place — text edits, checkbox clicks, new items — and every change is written
-    straight back into the markdown, which stays the single source of truth for you
-    and both AIs.</p>
-    <p>The page re-reads the file every couple of seconds (paused while you type),
-    so AI updates appear on their own.</p>
+    <h2>Open a checklist</h2>
+    <p><strong>tandem</strong> is a shared board between you and your AI agents: one markdown
+    file on your machine that everyone reads and writes. Open an existing checklist .md, or
+    click <em>New checklist</em> to start a project folder from the templates.</p>
+    <p>Everything is editable in place — text edits, checkbox clicks, new items — and every
+    change is written straight back into the markdown, which stays the single source of truth
+    for you and every agent. The page re-reads the file every couple of seconds (paused while
+    you type), so agent updates appear on their own.</p>
+    <p>Works in Chromium browsers (Chrome, Edge, Arc). The <a href="/protocol">protocol</a>
+    explains the rules everyone plays by.</p>
   </div>
   <div id="agents" hidden></div>
   <div id="doc" hidden></div>
@@ -129,6 +147,24 @@
   <p class="hint" id="hint" hidden>Click any text to edit — saves as you type ·
   Enter in an item adds a new one below · Backspace on an empty item deletes it ·
   Raw = edit the whole file</p>
+  <aside id="help" hidden>
+    <h3>The rules</h3>
+    <p><strong>Ownership</strong> — only humans check boxes or cross items out; settled items
+    are never resurfaced. Agents only append.</p>
+    <p><strong>Markers</strong></p>
+    <ul>
+      <li><code>→ 🤖 Name: in progress — …</code> claim + lock</li>
+      <li><code>→ 🤖 Name: done — …</code> awaiting your check</li>
+      <li><code>→ ❓ Name: …</code> blocked on you</li>
+      <li><code>⚠️ HOLD Name topic</code> shared-file lock</li>
+    </ul>
+    <p><strong>Files</strong> — <code>checklist.md</code> (Verify / Discuss / Later),
+    <code>decisions.md</code> (the why), <code>archive.md</code> (history),
+    <code>agents.md</code> (point new agents here first).</p>
+    <p><strong>Write safety</strong> — the file is hot: agents re-read before every write and
+    write atomically. Your checkbox states are sacred.</p>
+    <p><a href="/protocol">Full protocol →</a></p>
+  </aside>
 </main>
 <script>
 (() => {
@@ -137,6 +173,15 @@
   let lastModified = 0;
   let lastInputAt = 0;
   let rawMode = false;
+
+  if (!window.showOpenFilePicker) {
+    $('empty').innerHTML =
+      '<h2>Browser not supported</h2><p>The board needs the File System Access API — ' +
+      'open this page in a Chromium browser (Chrome, Edge, Arc).</p>';
+    $('open').disabled = true;
+    $('new').disabled = true;
+    return;
+  }
 
   // --- handle persistence (best effort; file:// origins can be finicky) ---
   const idb = () => new Promise((res, rej) => {
@@ -178,7 +223,8 @@
         (m) =>
           `<span class="marker ${m.includes('done') ? 'done' : 'progress'}">${m}</span>`
       )
-      .replace(/(→ ❓ [^→]*)/g, '<span class="marker blocked">$1</span>');
+      .replace(/(→ ❓ [^→]*)/g, '<span class="marker blocked">$1</span>')
+      .replace(/(⚠️ HOLD [^·→<]*)/g, '<span class="marker blocked">$1</span>');
 
   const readFileText = async () => (await handle.getFile()).text();
   const writeFileText = async (text) => {
@@ -244,32 +290,40 @@
     });
   };
 
-  // "Who's on what" strip: derived live from the in-progress markers.
+  // "Who's on what" strip: agent names derived live from the markers in the file.
   const renderAgents = (lines) => {
-    const busy = { Claude: [], Codex: [] };
+    const busy = new Map();
+    const add = (who, what) => {
+      if (!busy.has(who)) busy.set(who, []);
+      busy.get(who).push(what);
+    };
     for (const line of lines) {
-      const m = line.match(
-        /^\s*- \[[ xX]\]\s*(.*?)\s*→ 🤖 (Claude|Codex): in progress/
-      );
-      if (m) busy[m[2]].push(m[1].replace(/✅|⚠️|🔨|🔴/gu, '').trim());
+      const m = line.match(/^\s*- \[[ xX]\]\s*(.*?)\s*→ 🤖 (\S+): in progress/);
+      if (m) add(m[2], m[1].replace(/✅|⚠️|🔨|🔴/gu, '').trim());
+      for (const h of line.matchAll(/⚠️ HOLD (\S+) ([^·→]*)/g)) {
+        add(h[1], 'HOLD: ' + h[2].trim());
+      }
     }
-    const lane = (who, cls) => `
+    const palette = ['claude', 'codex', 'third'];
+    const lanes = [...busy.entries()].map(
+      ([who, items], i) => `
       <div class="lane">
-        <span class="who ${cls}">${who}</span>
-        <span class="what">${
-          busy[who].length
-            ? escapeHtml(busy[who].join('  ·  '))
-            : 'nothing in progress'
-        }</span>
-      </div>`;
+        <span class="who ${palette[i % palette.length]}">${escapeHtml(who)}</span>
+        <span class="what">${escapeHtml(items.join('  ·  '))}</span>
+      </div>`
+    );
+    // The division-of-labor rule line comes from the file itself (template header).
+    const rule = lines.find((l) => l.startsWith('Rules:'));
     $('agents').innerHTML =
-      lane('Claude', 'claude') +
-      lane('Codex', 'codex') +
-      `<div class="rule">General rule: Claude (Fable) takes the hard/architectural items · Codex takes the easier, self-contained ones · only Amy checks boxes</div>`;
+      (lanes.join('') ||
+        '<div class="lane"><span class="what">no agents in progress</span></div>') +
+      (rule ? `<div class="rule">${escapeHtml(rule)}</div>` : '');
     $('agents').hidden = rawMode;
   };
 
   const render = (lines) => {
+    const h1 = lines.find((l) => l.startsWith('# '));
+    $('title').textContent = h1 ? h1.slice(2) : 'tandem — board';
     const doc = $('doc');
     doc.hidden = rawMode;
     $('empty').hidden = true;
@@ -287,7 +341,7 @@
         const box = document.createElement('input');
         box.type = 'checkbox';
         box.checked = state !== ' ';
-        box.title = 'A check means Amy tested + verified';
+        box.title = 'A check means the human tested + verified';
         const text = document.createElement('div');
         text.className = 'editable';
         text.contentEditable = 'plaintext-only';
@@ -392,16 +446,116 @@
     rawT = setTimeout(() => void writeFileText($('raw').value), 900);
   });
 
-  const connect = async (h) => {
+  // Sibling files of the project folder — only discoverable when we hold the
+  // directory handle (New checklist flow); a plain file pick can't see its parent.
+  let dirHandle = null;
+  const SIBS = ['checklist.md', 'decisions.md', 'archive.md', 'agents.md'];
+  const renderSibs = async () => {
+    const el = $('sibs');
+    el.replaceChildren();
+    if (!dirHandle) return;
+    for (const name of SIBS) {
+      try {
+        const fh = await dirHandle.getFileHandle(name);
+        const b = document.createElement('button');
+        b.className = 'secondary sib' + (handle && handle.name === name ? ' active' : '');
+        b.textContent = name.replace('.md', '');
+        b.addEventListener('click', () => void connect(fh, dirHandle));
+        el.append(b);
+      } catch { /* sibling absent */ }
+    }
+  };
+
+  const connect = async (h, dir = null) => {
     const perm = await h.requestPermission({ mode: 'readwrite' });
     if (perm !== 'granted') return false;
     handle = h;
+    if (dir) dirHandle = dir;
     lastModified = 0;
     await refresh(true);
     $('rawBtn').hidden = false;
     $('open').textContent = 'Open another file';
+    void renderSibs();
     return true;
   };
+
+  // sync: templates/ — generated from the repo template files; regenerate rather than hand-edit.
+  const TEMPLATES = {
+    'checklist.md': `# {{NAME}} — Checklist
+
+Started {{DATE}} · decisions: \`decisions.md\` · history: \`archive.md\` · agent rules: \`agents.md\`
+
+Rules: only humans check boxes · agents append attributed markers · hard/architectural → the stronger agent, self-contained → the other.
+
+---
+
+## 1 · Verify (done — awaiting human check)
+
+- [ ]  🔨 (example) First finished item lands here → 🤖 Agent: done — what + where
+
+## 2 · Discuss (needs a human/team decision)
+
+- [ ]  🔴 (example) Open question for the human
+
+## 3 · Later (parked, no action now)
+
+- [ ]  (example) Parked idea
+`,
+    'decisions.md': `# {{NAME}} — Decisions
+
+Numbered, append-only. Every entry: what was decided, WHY, and where it landed (commit/file).
+
+1. (example) Decided X over Y — because Z. Landed in <commit>.
+`,
+    'archive.md': `# {{NAME}} — Archive
+
+Append-only history. Done items move here (full detail) so the checklist stays short.
+`,
+    'agents.md': `# Agent operating instructions — {{NAME}}
+
+You are one of several agents (plus a human) working \`checklist.md\` in this folder. Read this
+whole file before touching anything.
+
+1. **The checklist is the single source of truth.** Read it before starting; re-read it
+   immediately before every write.
+2. **Only the human checks boxes or crosses items out.** Settled items are settled — never
+   resurface or re-add them.
+3. **Append, don't rewrite.** Respond to an item by appending a marker to its line:
+   \`→ 🤖 <YourName>: in progress — <what>\` when you claim it (this IS the lock; one agent per
+   item), \`→ 🤖 <YourName>: done — <what, commit/link>\` when finished,
+   \`→ ❓ <YourName>: <question>\` when blocked on the human.
+4. **Shared code:** add \`⚠️ HOLD <YourName> <file/topic>\` while editing files another agent may
+   touch; edit it away when done. Respect others' HOLDs.
+5. **Write safety:** the file is hot (a browser board and other agents write it). Write
+   atomically (temp file + rename) from a fresh read. Never regenerate the file from memory.
+6. **Division of labor:** architectural/risky items → the stronger agent; self-contained →
+   the other. If unsure, ask via \`→ ❓\`.
+7. Decisions (with the WHY) go to \`decisions.md\`, numbered. Finished detail moves to
+   \`archive.md\`. Keep the checklist short.
+`,
+  };
+
+  $('new').addEventListener('click', async () => {
+    const name = prompt('Project name?');
+    if (!name) return;
+    let dir;
+    try {
+      dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } catch { return; /* cancelled */ }
+    const date = new Date().toISOString().slice(0, 10);
+    const fill = (t) => t.replaceAll('{{NAME}}', name).replaceAll('{{DATE}}', date);
+    for (const [f, body] of Object.entries(TEMPLATES)) {
+      const fh = await dir.getFileHandle(f, { create: true });
+      const w = await fh.createWritable();
+      await w.write(fill(body));
+      await w.close();
+    }
+    if (await connect(await dir.getFileHandle('checklist.md'), dir)) saveHandle(handle);
+  });
+
+  $('helpBtn').addEventListener('click', () => {
+    $('help').hidden = !$('help').hidden;
+  });
 
   // One button, two modes: re-grant access to the remembered file, or pick one.
   let reconnectHandle = null;
