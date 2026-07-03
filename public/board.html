@@ -73,7 +73,9 @@
     border-radius: 10px;
   }
   .item.checked { opacity: 0.55; }
-  .item.checked .editable { text-decoration: line-through; text-decoration-color: var(--subtext); }
+  .item.checked .main { text-decoration: line-through; text-decoration-color: var(--subtext); }
+  .item .col { min-width: 0; flex: 1; }
+  .col .cont { margin-top: 2px; }
   .item input[type="checkbox"] {
     appearance: none; flex-shrink: 0; margin-top: 2px;
     width: 17px; height: 17px; border-radius: 5px;
@@ -350,7 +352,9 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
 ## 1 · Verify (done — awaiting human check)
 
 - [ ]  🔨 Fix the login redirect loop on Safari → 🤖 Fable: done — root cause was a stale cookie guard; commit 41c9a2. → 💬 works! double-check private browsing too → 🤖 Fable: done — private browsing fixed too; commit 8ba21f.
-- [ ]  🔨 New empty-state illustration on the dashboard → 🤖 Codex: done — three variants in /assets/empty; picked the telescope one. → 💬 love it, but try it in the brand purple
+- [ ]  🔨 New empty-state illustration on the dashboard → 🤖 Codex: done — three variants in /assets/empty; picked the telescope one.
+  → 💬 love it, but try it in the brand purple
+  → 🤖 Codex: done — re-cut in brand purple; commit 77ac02.
 - [x]  🔨 New footer with the updated legal links → 🤖 Codex: done — commit 9e3d17.
 - [x]  🔨 Compress the hero images → 🤖 Fable: done — 4.1 MB → 610 KB, commit c07d33.
 
@@ -445,9 +449,16 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       if (!busy.has(who)) busy.set(who, []);
       busy.get(who).push(what);
     };
+    let lastItem = '';
     for (const line of lines) {
+      const im = line.match(/^\s*- \[[ xX]\]\s*(.*)$/);
+      if (im) lastItem = im[1].split('→')[0].replace(/✅|⚠️|🔨|🔴/gu, '').trim();
       const m = line.match(/^\s*- \[[ xX]\]\s*(.*?)\s*→ 🤖 (\S+): in progress/);
       if (m) add(m[2], m[1].replace(/✅|⚠️|🔨|🔴/gu, '').trim());
+      else {
+        const c = line.match(/^\s*→ 🤖 (\S+): in progress/u);
+        if (c) add(c[1], lastItem || 'a comment thread');
+      }
       for (const h of line.matchAll(/⚠️ HOLD (\S+) ([^·→]*)/g)) {
         add(h[1], 'HOLD: ' + h[2].trim());
       }
@@ -513,12 +524,17 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       for (const r of checkedRows) frag.append(r);
       checkedRows.length = 0;
     };
+    // A marker line directly under an item is that item's comment: it renders
+    // inside the card and checks/sinks with it. File order = chronology.
+    const CONT_RE = /^\s*(→ (?:🤖|❓|💬)|⚠️ HOLD)\s/u;
+    let skipUntil = -1;
     doc.hidden = rawMode;
     $('empty').hidden = true;
     $('hint').hidden = false;
     renderAgents(lines);
     const frag = document.createDocumentFragment();
     lines.forEach((line, index) => {
+      if (index <= skipUntil) return;
       const meta = { index, original: line };
 
       const item = line.match(/^(\s*- \[)([ xX])(\]\s*)(.*)$/);
@@ -530,10 +546,37 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         box.type = 'checkbox';
         box.checked = state !== ' ';
         box.title = 'A check means the human tested + verified';
+        const contMetas = [];
+        for (let k = index + 1; k < lines.length && CONT_RE.test(lines[k]); k++) {
+          contMetas.push({ index: k, original: lines[k] });
+        }
+        if (contMetas.length) skipUntil = contMetas[contMetas.length - 1].index;
+        const lastMeta = contMetas.length ? contMetas[contMetas.length - 1] : meta;
         const text = document.createElement('div');
-        text.className = 'editable';
+        text.className = 'editable main';
         text.contentEditable = 'plaintext-only';
         text.innerHTML = decorate(item[4]);
+        const col = document.createElement('div');
+        col.className = 'col';
+        col.append(text);
+        for (const cmeta of contMetas) {
+          const cdiv = document.createElement('div');
+          cdiv.className = 'editable cont';
+          cdiv.contentEditable = 'plaintext-only';
+          cdiv.innerHTML = decorate(cmeta.original.trim());
+          bindEditable(cdiv, async () => {
+            const t = cleanText(cdiv);
+            if (t === '') {
+              if (await spliceLines(cmeta, 1, []) !== -1) {
+                lastModified = 0;
+                await refresh(true);
+              }
+            } else {
+              await replaceLine(cmeta, '  ' + t);
+            }
+          });
+          col.append(cdiv);
+        }
         const lineFor = (checked) => pre + (checked ? 'x' : ' ') + post + cleanText(text);
         box.addEventListener('change', async () => {
           row.classList.toggle('checked', box.checked);
@@ -547,7 +590,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           if (e.key === 'Enter') {
             e.preventDefault();
             await replaceLine(meta, lineFor(box.checked));
-            const at = await spliceLines(meta, 0, [pre.replace(/\S.*$/, '') + '- [ ]  🔨 ']);
+            const at = await spliceLines(lastMeta, 0, [pre.replace(/\S.*$/, '') + '- [ ]  🔨 ']);
             if (at !== -1) { lastModified = 0; await refresh(true, at); }
           }
           if (e.key === 'Backspace' && cleanText(text) === '') {
@@ -579,9 +622,10 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
             const note = input.value.trim();
             wrap.remove();
             if (!note) return;
-            await replaceLine(meta, lineFor(box.checked) + ' → 💬 ' + note);
-            lastModified = 0;
-            await refresh(true);
+            if (await spliceLines(lastMeta, 0, ['  → 💬 ' + note]) !== -1) {
+              lastModified = 0;
+              await refresh(true);
+            }
           };
           send.addEventListener('click', () => void submit());
           input.addEventListener('keydown', (e) => {
@@ -592,7 +636,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           row.after(wrap);
           input.focus();
         });
-        row.append(box, text, fb);
+        row.append(box, col, fb);
         if (box.checked) checkedRows.push(row);
         else frag.append(row);
         return;

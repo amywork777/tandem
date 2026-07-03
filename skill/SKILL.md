@@ -48,6 +48,10 @@ extra files. The full four-file set below is for projects that will live a while
 settled — never resurface, re-open, or re-add it. You only append; never rewrite the human's
 words. Inline notes addressed to you (e.g. "AMY: fix the wording") are work orders.
 
+**Where markers go**: on the item's line, or — for anything longer — on its own line DIRECTLY
+under the item, indented two spaces. Both belong to the item and follow its checkbox; file
+order = chronology. Never leave a comment anywhere except on or directly under its item.
+
 **Markers (exact grammar)**:
 
 | Marker | Meaning |

@@ -14,10 +14,13 @@ name is yours.
    feedback on checked items.
 3. **Human feedback** appears on items as `→ 💬 <note>` (or any inline note addressed to
    you) — treat it as a work order and respond under the same item.
-4. **Append, don't rewrite.** Respond to an item by appending a marker to its line:
+4. **Append, don't rewrite.** Respond to an item by appending a marker to its line — or, for
+   anything longer, put the marker on its own line DIRECTLY under the item, indented two
+   spaces (both belong to the item and follow its checkbox; file order = chronology):
    `→ 🤖 <YourName>: in progress — <what>` when you claim it (this IS the lock; one agent per
    item), `→ 🤖 <YourName>: done — <what, commit/link>` when finished,
-   `→ ❓ <YourName>: <question>` when blocked on the human.
+   `→ ❓ <YourName>: <question>` when blocked on the human. Never leave a comment anywhere
+   except on or directly under its item.
 5. **Shared code:** add `⚠️ HOLD <YourName> <file/topic>` while editing files another agent may
    touch; edit it away when done. Respect others' HOLDs.
 6. **Write safety:** the file is hot (a browser board and other agents write it). Write

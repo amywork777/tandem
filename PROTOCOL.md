@@ -8,8 +8,11 @@ that safe and legible.
 - **Only humans check boxes or cross items out.** A checked or crossed item is settled: agents
   never resurface, re-open, or re-add it. **A checkmark with no comment = accepted as-is** —
   feedback (`→ 💬`) is only for when something needs changing.
-- **Agents only append.** An agent responds to an item by appending an attributed marker to that
-  item's line (or a new line directly under it) — never by rewriting the human's words.
+- **Agents only append.** An agent responds to an item by appending an attributed marker to the
+  item's line, or — for anything longer — as its own line DIRECTLY under the item, indented two
+  spaces. Both belong to that item: the board renders them as one card that checks, dims, and
+  sinks together, in file order (= chronological). Never rewrite the human's words, and never
+  leave a comment floating away from its item.
 - Humans may write feedback anywhere, in any form. The `→ 💬 <note>` marker is the standard
   way; any inline note addressed to an agent is a work order either way.
 - The board sinks checked items to the bottom of their section — display only; the file keeps
