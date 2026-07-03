@@ -85,6 +85,14 @@
     border-radius: 10px;
   }
   .item.checked { opacity: 0.55; }
+  .item.ready { border-left: 3px solid var(--green); }
+  .item.ask { border-left: 3px solid var(--red); }
+  .item .editable:hover { background: var(--surface2); cursor: text; }
+  #demoBanner {
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg));
+    border-bottom: 1px solid var(--accent);
+    padding: 8px 20px; font-size: 12.5px; color: var(--text);
+  }
   .item.checked .main { text-decoration: line-through; text-decoration-color: var(--subtext); }
   .item .col { min-width: 0; flex: 1; }
   .col .cont { margin-top: 2px; }
@@ -215,6 +223,9 @@
   <button id="new" class="secondary">New checklist</button>
   <button id="open">Open files</button>
 </header>
+<div id="demoBanner" hidden>👋 This is the live demo — click anything, nothing is saved.
+  To use it for real, hit <b>Open files</b> with your own checklist .md.
+  <a href="/">What is tandem?</a></div>
 <main>
   <div id="empty">
     <h2>🚲 Hop on — open a checklist</h2>
@@ -481,6 +492,26 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       return diff;
     };
     const seen = new Map();
+    let toVerify = 0;
+    let questions = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const im = lines[i].match(/^\s*- \[ \]\s*(.*)$/);
+      if (!im) continue;
+      let thread = im[1];
+      for (
+        let k = i + 1;
+        k < lines.length && /^\s*(→ (?:🤖|❓|💬)|⚠️ HOLD)\s/u.test(lines[k]);
+        k++
+      ) {
+        thread += ' ' + lines[k];
+      }
+      const marks = [...thread.matchAll(/→ (🤖 \S+: (?:done|in progress)|❓|💬)/gu)].map(
+        (m) => m[1]
+      );
+      const last = marks[marks.length - 1] || '';
+      if (last.startsWith('❓')) questions++;
+      else if (/^🤖 \S+: done/u.test(last)) toVerify++;
+    }
     let lastItem = '';
     for (const line of lines) {
       const im = line.match(/^\s*- \[[ xX]\]\s*(.*)$/);
@@ -533,10 +564,18 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         }</span>
       </div>`;
     });
+    const youBits = [];
+    if (toVerify) youBits.push(`${toVerify} to verify (green edge)`);
+    if (questions) youBits.push(`${questions} question${questions > 1 ? 's' : ''} (red edge)`);
+    const youRow = youBits.length
+      ? `<div class="lane"><span class="who"><span class="pill you">🧍 you</span></span>` +
+        `<span class="what">waiting on you: ${youBits.join(' · ')}</span></div>`
+      : '';
     $('agents').innerHTML =
       `<div class="strip-label">The crew — who does what` +
       (ruleLine ? `<button class="edit-roles">✎ edit roles</button>` : '') +
       `</div>` +
+      youRow +
       (lanes.join('') ||
         '<div class="lane"><span class="what free">no agents yet — name roles on the Rules: line, e.g. roles: Fable = planner · Codex = coder</span></div>') +
       `<div class="legend">☑ your check = accepted, done · ` +
@@ -597,6 +636,10 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         const [, pre, state, post] = item;
         const row = document.createElement('div');
         row.className = 'item' + (state !== ' ' ? ' checked' : '');
+        if (state === ' ') {
+          if (lastMark.startsWith('❓')) row.className += ' ask';
+          else if (/^🤖 \S+: done/u.test(lastMark)) row.className += ' ready';
+        }
         const box = document.createElement('input');
         box.type = 'checkbox';
         box.checked = state !== ' ';
@@ -607,6 +650,13 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         }
         if (contMetas.length) skipUntil = contMetas[contMetas.length - 1].index;
         const lastMeta = contMetas.length ? contMetas[contMetas.length - 1] : meta;
+        // The thread's LAST marker says whose move it is: agent done → yours
+        // (green edge), agent question → yours (red edge), 💬 → theirs.
+        const thread = [item[4], ...contMetas.map((c) => c.original)].join(' ');
+        const marks = [...thread.matchAll(/→ (🤖 \S+: (?:done|in progress)|❓|💬)/gu)].map(
+          (m) => m[1]
+        );
+        const lastMark = marks[marks.length - 1] || '';
         const text = document.createElement('div');
         text.className = 'editable main';
         text.contentEditable = 'plaintext-only';
@@ -995,6 +1045,7 @@ name is yours.
       return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     };
     demoText = DEMO_MD.replaceAll('{{T_NOW}}', stamp(3)).replaceAll('{{T_OLD}}', stamp(190));
+    $('demoBanner').hidden = false;
     $('rawBtn').hidden = false;
     if (!window.showOpenFilePicker) {
       $('open').disabled = true;
