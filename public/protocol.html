@@ -44,8 +44,11 @@
     <li><strong>Agents only append.</strong> An agent responds to an item by appending an
       attributed marker to that item's line (or a new line directly under it) — never by
       rewriting the human's words.</li>
-    <li>Humans may write feedback anywhere, in any form. Inline notes addressed to an agent
-      (e.g. "AMY: make the toast clearer") are work orders.</li>
+    <li>Humans may write feedback anywhere, in any form. The <code>→ 💬 &lt;note&gt;</code>
+      marker is the standard way; any inline note addressed to an agent is a work order either
+      way.</li>
+    <li>The board sinks checked items to the bottom of their section — display only; the file
+      keeps the human's order.</li>
   </ul>
 
   <h2>Markers (exact grammar)</h2>
@@ -55,6 +58,7 @@
     <tr><td><code>→ 🤖 Name: done — &lt;what, commit/link&gt;</code></td><td>Work finished, awaiting human verification.</td></tr>
     <tr><td><code>→ ❓ Name: &lt;question&gt;</code></td><td>Blocked on the human. Rendered red; humans scan for these.</td></tr>
     <tr><td><code>⚠️ HOLD Name &lt;file or topic&gt;</code></td><td>Editing shared code — other agents keep off until the marker is edited to done/removed.</td></tr>
+    <tr><td><code>→ 💬 &lt;note&gt;</code></td><td>Human feedback on an item — an instruction to the agents. The board adds one via the 💬 button.</td></tr>
   </table></div>
 
   <h2>The file set</h2>

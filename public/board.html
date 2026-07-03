@@ -78,6 +78,12 @@
   .marker.done { color: var(--green); }
   .marker.progress { color: var(--amber); }
   .marker.blocked { color: var(--red); }
+  .marker.feedback { color: var(--accent); }
+  .item .fb {
+    background: none; border: 0; padding: 0 2px; cursor: pointer;
+    font-size: 13px; line-height: 1.4; opacity: 0; flex-shrink: 0;
+  }
+  .item:hover .fb, .item .fb:focus { opacity: 0.65; }
   #agents {
     display: flex; flex-direction: column; gap: 6px;
     margin: 14px 0 4px; padding: 10px 14px;
@@ -157,7 +163,10 @@
       <li><code>→ 🤖 Name: done — …</code> awaiting your check</li>
       <li><code>→ ❓ Name: …</code> blocked on you</li>
       <li><code>⚠️ HOLD Name topic</code> shared-file lock</li>
+      <li><code>→ 💬 note</code> your feedback — the 💬 button on any item adds one</li>
     </ul>
+    <p><strong>Checked items sink</strong> to the bottom of their section (display only — the
+    file keeps your order).</p>
     <p><strong>Files</strong> — <code>checklist.md</code> (Verify / Discuss / Later),
     <code>decisions.md</code> (the why), <code>archive.md</code> (history),
     <code>agents.md</code> (point new agents here first).</p>
@@ -224,7 +233,8 @@
           `<span class="marker ${m.includes('done') ? 'done' : 'progress'}">${m}</span>`
       )
       .replace(/(→ ❓ [^→]*)/g, '<span class="marker blocked">$1</span>')
-      .replace(/(⚠️ HOLD [^·→<]*)/g, '<span class="marker blocked">$1</span>');
+      .replace(/(⚠️ HOLD [^·→<]*)/g, '<span class="marker blocked">$1</span>')
+      .replace(/(→ 💬 [^→]*)/g, '<span class="marker feedback">$1</span>');
 
   const readFileText = async () => (await handle.getFile()).text();
   const writeFileText = async (text) => {
@@ -325,6 +335,13 @@
     const h1 = lines.find((l) => l.startsWith('# '));
     $('title').textContent = h1 ? h1.slice(2) : 'tandem — board';
     const doc = $('doc');
+    // Checked items sink to the bottom of their section — display only, the
+    // file keeps the human's order.
+    const checkedRows = [];
+    const flushChecked = () => {
+      for (const r of checkedRows) frag.append(r);
+      checkedRows.length = 0;
+    };
     doc.hidden = rawMode;
     $('empty').hidden = true;
     $('hint').hidden = false;
@@ -350,6 +367,9 @@
         box.addEventListener('change', async () => {
           row.classList.toggle('checked', box.checked);
           await replaceLine(meta, lineFor(box.checked));
+          box.blur();
+          lastModified = 0;
+          await refresh(true);
         });
         bindEditable(text, () => replaceLine(meta, lineFor(box.checked)));
         text.addEventListener('keydown', async (e) => {
@@ -367,13 +387,30 @@
             }
           }
         });
-        row.append(box, text);
-        frag.append(row);
+        const fb = document.createElement('button');
+        fb.className = 'fb';
+        fb.title = 'Add feedback for the agents';
+        fb.textContent = '💬';
+        fb.addEventListener('click', () => {
+          text.textContent = cleanText(text) + ' → 💬 ';
+          text.focus();
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          range.collapse(false);
+          const sel = getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+          lastInputAt = Date.now();
+        });
+        row.append(box, text, fb);
+        if (box.checked) checkedRows.push(row);
+        else frag.append(row);
         return;
       }
 
       const h = line.match(/^(#{1,3}) (.*)$/);
       if (h) {
+        flushChecked();
         const el = document.createElement(h[1].length === 1 ? 'h1' : 'h2');
         el.className = 'md';
         const text = document.createElement('span');
@@ -398,6 +435,7 @@
         frag.append(p);
       }
     });
+    flushChecked();
     doc.replaceChildren(frag);
   };
 
@@ -520,17 +558,19 @@ whole file before touching anything.
    immediately before every write.
 2. **Only the human checks boxes or crosses items out.** Settled items are settled — never
    resurface or re-add them.
-3. **Append, don't rewrite.** Respond to an item by appending a marker to its line:
+3. **Human feedback** appears on items as \`→ 💬 <note>\` (or any inline note addressed to
+   you) — treat it as a work order and respond under the same item.
+4. **Append, don't rewrite.** Respond to an item by appending a marker to its line:
    \`→ 🤖 <YourName>: in progress — <what>\` when you claim it (this IS the lock; one agent per
    item), \`→ 🤖 <YourName>: done — <what, commit/link>\` when finished,
    \`→ ❓ <YourName>: <question>\` when blocked on the human.
-4. **Shared code:** add \`⚠️ HOLD <YourName> <file/topic>\` while editing files another agent may
+5. **Shared code:** add \`⚠️ HOLD <YourName> <file/topic>\` while editing files another agent may
    touch; edit it away when done. Respect others' HOLDs.
-5. **Write safety:** the file is hot (a browser board and other agents write it). Write
+6. **Write safety:** the file is hot (a browser board and other agents write it). Write
    atomically (temp file + rename) from a fresh read. Never regenerate the file from memory.
-6. **Division of labor:** architectural/risky items → the stronger agent; self-contained →
+7. **Division of labor:** architectural/risky items → the stronger agent; self-contained →
    the other. If unsure, ask via \`→ ❓\`.
-7. Decisions (with the WHY) go to \`decisions.md\`, numbered. Finished detail moves to
+8. Decisions (with the WHY) go to \`decisions.md\`, numbered. Finished detail moves to
    \`archive.md\`. Keep the checklist short.
 `,
   };

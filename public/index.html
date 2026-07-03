@@ -75,6 +75,7 @@
   .m-done { color: var(--green); }
   .m-prog { color: var(--amber); }
   .m-q { color: var(--red); }
+  .m-fb { color: var(--accent); }
   .fine { color: var(--subtext); font-size: 13.5px; }
   .paste-wrap { position: relative; }
   .paste-wrap pre {
@@ -128,13 +129,14 @@
     <div class="demo-item done-item"><div class="demo-box checked"></div>
       <div class="t">Fix login redirect loop <span class="m-done">→ 🤖 Fable: done — root cause was a stale cookie guard, commit 41c9a2</span></div></div>
     <div class="demo-item"><div class="demo-box"></div>
-      <div>Empty-state illustration for the dashboard <span class="m-prog">→ 🤖 Codex: in progress — building the SVG variants</span></div></div>
+      <div>Empty-state illustration for the dashboard <span class="m-prog">→ 🤖 Codex: in progress — building the SVG variants</span> <span class="m-fb">→ 💬 keep it playful, like the 404 page</span></div></div>
     <div class="demo-item"><div class="demo-box"></div>
       <div>🔴 Pricing page copy <span class="m-q">→ ❓ Fable: two tones drafted — playful or corporate?</span></div></div>
   </div>
   <p class="fine">Green = done, awaiting your check · amber = claimed and in flight · red = a
-  question waiting for you. The "who's on what" strip at the top of the board is derived live
-  from these markers.</p>
+  question waiting for you · purple 💬 = your feedback to the agents (every board item has a 💬
+  button). Checked items sink to the bottom of their section automatically. The "who's on what"
+  strip at the top of the board is derived live from these markers.</p>
 
   <h2>For your AI</h2>
   <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any
@@ -148,35 +150,33 @@
   an AGENTS.md.</p>
   <div class="paste-wrap">
     <button id="copyPaste" class="copy-btn">Copy</button>
-    <pre id="pasteBlock">You are joining a tandem board: a shared checklist between a human and one or more AI agents. One markdown file is the single source of truth. Follow these rules exactly.
+    <pre id="pasteBlock">You&#x27;re joining a &quot;tandem&quot; board: a checklist in ONE markdown file that a human and AI agents share. The human is in charge. Follow these rules exactly.
 
-THE FILES (in the project folder I&#x27;ll point you at):
-- checklist.md — the board. Live work only, three sections: &quot;1 · Verify&quot; (done, awaiting the human&#x27;s check), &quot;2 · Discuss&quot; (needs a human decision), &quot;3 · Later&quot; (parked).
-- decisions.md — every decision, numbered, append-only, always with the WHY.
-- archive.md — append-only history; move finished detail here so the checklist stays short.
-- agents.md — these instructions (project-specific copy).
+THE FILES (all in the project folder):
+- checklist.md — the board. Three sections: &quot;1 · Verify&quot; = finished work waiting for the human to check. &quot;2 · Discuss&quot; = questions for the human. &quot;3 · Later&quot; = parked.
+- decisions.md — what was decided and why (numbered).
+- archive.md — history of finished work.
+- agents.md — these rules, project-specific copy.
 
-OWNERSHIP:
-- Only the human checks boxes ([x]) or crosses items out. A checked or crossed item is SETTLED — never resurface, re-open, or re-add it, ever.
-- You only append. Respond to an item by appending a marker to its line (or a new line directly under it) — never rewrite the human&#x27;s words.
-- Inline notes addressed to you (e.g. &quot;AMY: fix the wording&quot;) are work orders.
+THE GOLDEN RULES:
+1. Only the human checks boxes or crosses things out. Anything checked or crossed is FINAL — never bring it back or redo it.
+2. Never rewrite the human&#x27;s words. You only ADD short notes (&quot;markers&quot;) to items.
+3. A note like &quot;→ 💬 make this blue&quot; on an item is the human talking to you. Treat it as an instruction and respond under that item.
 
-MARKERS (exact grammar — use your own name):
-- Claim + lock (one agent per item):  → 🤖 &lt;YourName&gt;: in progress — &lt;what&gt;
-- Finished, awaiting human check:     → 🤖 &lt;YourName&gt;: done — &lt;what, commit/link&gt;
-- Blocked on the human:               → ❓ &lt;YourName&gt;: &lt;question&gt;
-- Editing shared code:                ⚠️ HOLD &lt;YourName&gt; &lt;file or topic&gt;   (edit it away when done; respect others&#x27; HOLDs)
+YOUR MARKERS (copy these shapes exactly, using your own name):
+→ 🤖 Name: in progress — what you&#x27;re doing     ← this claims the item; one agent per item
+→ 🤖 Name: done — what you did + commit/link   ← moves it to &quot;waiting for human check&quot;
+→ ❓ Name: your question                        ← when you&#x27;re stuck waiting on the human
+⚠️ HOLD Name file-or-topic                      ← while editing shared code; remove when done
 
-DIVISION OF LABOR: architectural/risky items go to the stronger agent; self-contained items to the other. The in-progress marker IS the claim — no separate assignment step.
+SAVING THE FILE (important — it changes under you; the human&#x27;s browser and other agents also write it):
+- Re-read the file RIGHT BEFORE every save.
+- Build your new version from that fresh read, save to a temp file, rename it over the original.
+- Never save the file from memory — you&#x27;d wipe the human&#x27;s checkmarks.
 
-WRITE SAFETY (critical — the file is HOT; a browser board and other agents write it while you work):
-- Re-read the file immediately before EVERY write.
-- Write atomically: build the new content from that fresh read, write to a temp file, rename over the original. Never use an edit tool whose read snapshot may be stale.
-- Never regenerate the file from memory — the human&#x27;s checkbox states are sacred.
+HOUSEKEEPING: new decisions (and the why) go in decisions.md. Keep the checklist short — move finished detail to archive.md.
 
-HOUSEKEEPING: decisions (with the why) go to decisions.md, numbered. When the human checks a Verify item, move its detail to archive.md. Outward status (Linear/Notion/Slack) is generated FROM the checklist when asked — never maintained in parallel.
-
-Confirm you&#x27;ve understood, then read checklist.md and report: unchecked Verify items, any ❓ questions, and unclaimed work.</pre>
+Start now: read checklist.md, then tell the human (a) what&#x27;s waiting on them, (b) any open questions, and (c) which item you&#x27;re picking up.</pre>
   </div>
 
   <footer>

@@ -51,6 +51,7 @@ words. Inline notes addressed to you (e.g. "AMY: fix the wording") are work orde
 | `→ 🤖 Name: done — <what, commit/link>` | Work finished, awaiting human verification. |
 | `→ ❓ Name: <question>` | Blocked on the human. |
 | `⚠️ HOLD Name <file or topic>` | Editing shared code — others keep off until edited away. |
+| `→ 💬 <note>` | Human feedback — a work order; respond under the same item. |
 
 **Division of labor**: architectural/risky items → the stronger agent; self-contained → the
 other. The in-progress marker IS the claim.
@@ -81,6 +82,6 @@ starting with `Rules:` (the board renders it in the agents strip); then three H2
 
 `archive.md`: H1 + append-only history prose.
 
-`agents.md`: the operating instructions above, phrased for any agent, numbered 1–7
-(SSOT/re-read → human-only checkboxes → append markers → HOLD → atomic writes → division of
-labor → decisions/archive housekeeping).
+`agents.md`: the operating instructions above, phrased for any agent, numbered 1–8
+(SSOT/re-read → human-only checkboxes → 💬 feedback = work orders → append markers → HOLD →
+atomic writes → division of labor → decisions/archive housekeeping).
