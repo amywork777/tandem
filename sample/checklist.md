@@ -8,7 +8,9 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
 
 ## 1 · Verify (done — awaiting human check)
 
-- [ ]  🔨 Fix the login redirect loop on Safari → 🤖 Fable: done — root cause was a stale cookie guard; commit 41c9a2. Verify: log out, log back in on Safari, land on /home. → 💬 works! double-check private browsing too
+- [ ]  🔨 Fix the login redirect loop on Safari → 🤖 Fable: done — root cause was a stale cookie guard; commit 41c9a2. Verify: log out, log back in on Safari, land on /home.
+  → 💬 works! double-check private browsing too
+  → 🤖 Fable: done — private browsing fixed too; commit 8ba21f.
 - [x]  🔨 New footer with the updated legal links → 🤖 Codex: done — commit 9e3d17.
 
 ## 2 · Discuss (needs a human/team decision)
