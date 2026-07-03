@@ -132,14 +132,15 @@
   <button id="helpBtn" class="secondary" title="Protocol rules">?</button>
   <button id="rawBtn" class="secondary" hidden>Raw</button>
   <button id="new" class="secondary">New checklist</button>
-  <button id="open">Open checklist .md</button>
+  <button id="open">Open project folder</button>
 </header>
 <main>
   <div id="empty">
     <h2>Open a checklist</h2>
     <p><strong>tandem</strong> is a shared board between you and your AI agents: one markdown
-    file on your machine that everyone reads and writes. Open an existing checklist .md, or
-    click <em>New checklist</em> to start a project folder from the templates.</p>
+    file on your machine that everyone reads and writes. Open your project folder — every .md
+    inside becomes a tab up top — or click <em>New checklist</em> to start a fresh project
+    folder from the templates.</p>
     <p>Everything is editable in place — text edits, checkbox clicks, new items — and every
     change is written straight back into the markdown, which stays the single source of truth
     for you and every agent. The page re-reads the file every couple of seconds (paused while
@@ -183,7 +184,7 @@
   let lastInputAt = 0;
   let rawMode = false;
 
-  if (!window.showOpenFilePicker) {
+  if (!window.showDirectoryPicker) {
     $('empty').innerHTML =
       '<h2>Browser not supported</h2><p>The board needs the File System Access API — ' +
       'open this page in a Chromium browser (Chrome, Edge, Arc).</p>';
@@ -194,21 +195,21 @@
 
   // --- handle persistence (best effort; file:// origins can be finicky) ---
   const idb = () => new Promise((res, rej) => {
-    const r = indexedDB.open('cmf-todo', 1);
+    const r = indexedDB.open('tandem', 1);
     r.onupgradeneeded = () => r.result.createObjectStore('kv');
     r.onsuccess = () => res(r.result);
     r.onerror = () => rej(r.error);
   });
-  const saveHandle = async (h) => {
+  const idbPut = async (key, val) => {
     try {
-      (await idb()).transaction('kv', 'readwrite').objectStore('kv').put(h, 'handle');
+      (await idb()).transaction('kv', 'readwrite').objectStore('kv').put(val, key);
     } catch { /* non-fatal */ }
   };
-  const loadHandle = async () => {
+  const idbGet = async (key) => {
     try {
       const db = await idb();
       return await new Promise((res) => {
-        const g = db.transaction('kv').objectStore('kv').get('handle');
+        const g = db.transaction('kv').objectStore('kv').get(key);
         g.onsuccess = () => res(g.result ?? null);
         g.onerror = () => res(null);
       });
@@ -484,23 +485,32 @@
     rawT = setTimeout(() => void writeFileText($('raw').value), 900);
   });
 
-  // Sibling files of the project folder — only discoverable when we hold the
-  // directory handle (New checklist flow); a plain file pick can't see its parent.
+  // Every .md in the project folder becomes a switcher tab, canonical four first.
   let dirHandle = null;
-  const SIBS = ['checklist.md', 'decisions.md', 'archive.md', 'agents.md'];
+  const CANON = ['checklist.md', 'decisions.md', 'archive.md', 'agents.md'];
   const renderSibs = async () => {
     const el = $('sibs');
     el.replaceChildren();
     if (!dirHandle) return;
-    for (const name of SIBS) {
-      try {
-        const fh = await dirHandle.getFileHandle(name);
-        const b = document.createElement('button');
-        b.className = 'secondary sib' + (handle && handle.name === name ? ' active' : '');
-        b.textContent = name.replace('.md', '');
-        b.addEventListener('click', () => void connect(fh, dirHandle));
-        el.append(b);
-      } catch { /* sibling absent */ }
+    const names = [];
+    try {
+      for await (const entry of dirHandle.values()) {
+        if (entry.kind === 'file' && entry.name.endsWith('.md')) names.push(entry.name);
+      }
+    } catch { return; }
+    names.sort((a, b) => {
+      const ia = CANON.indexOf(a);
+      const ib = CANON.indexOf(b);
+      return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib) || a.localeCompare(b);
+    });
+    for (const name of names.slice(0, 8)) {
+      const b = document.createElement('button');
+      b.className = 'secondary sib' + (handle && handle.name === name ? ' active' : '');
+      b.textContent = name.replace(/\.md$/, '');
+      b.addEventListener('click', async () => {
+        await connect(await dirHandle.getFileHandle(name), dirHandle);
+      });
+      el.append(b);
     }
   };
 
@@ -512,7 +522,11 @@
     lastModified = 0;
     await refresh(true);
     $('rawBtn').hidden = false;
-    $('open').textContent = 'Open another file';
+    $('open').textContent = 'Open another folder';
+    if (dirHandle) {
+      void idbPut('dir', dirHandle);
+      void idbPut('lastFile', h.name);
+    }
     void renderSibs();
     return true;
   };
@@ -591,42 +605,64 @@ whole file before touching anything.
       await w.write(fill(body));
       await w.close();
     }
-    if (await connect(await dir.getFileHandle('checklist.md'), dir)) saveHandle(handle);
+    await connect(await dir.getFileHandle('checklist.md'), dir);
   });
 
   $('helpBtn').addEventListener('click', () => {
     $('help').hidden = !$('help').hidden;
   });
 
-  // One button, two modes: re-grant access to the remembered file, or pick one.
-  let reconnectHandle = null;
+  // One button, two modes: re-grant access to the remembered folder, or pick one.
+  let reconnectDir = null;
+  const openFolder = async () => {
+    let dir;
+    try {
+      dir = await window.showDirectoryPicker({ mode: 'readwrite' });
+    } catch { return; /* cancelled */ }
+    let fh = null;
+    try {
+      fh = await dir.getFileHandle('checklist.md');
+    } catch { /* no canonical checklist — fall through to first .md */ }
+    if (!fh) {
+      for await (const entry of dir.values()) {
+        if (entry.kind === 'file' && entry.name.endsWith('.md')) { fh = entry; break; }
+      }
+    }
+    if (!fh) { setStatus('no .md files in that folder'); return; }
+    await connect(fh, dir);
+  };
   $('open').addEventListener('click', async () => {
-    if (reconnectHandle) {
-      const h = reconnectHandle;
-      reconnectHandle = null;
-      if (await connect(h)) return;
-      $('open').textContent = 'Open checklist .md';
+    if (reconnectDir) {
+      const dir = reconnectDir;
+      reconnectDir = null;
+      if ((await dir.requestPermission({ mode: 'readwrite' })) === 'granted') {
+        dirHandle = dir;
+        const name = (await idbGet('lastFile')) || 'checklist.md';
+        try {
+          if (await connect(await dir.getFileHandle(name), dir)) return;
+        } catch { /* file gone — fall through to picker */ }
+      }
+      $('open').textContent = 'Open project folder';
       return;
     }
-    try {
-      const [h] = await window.showOpenFilePicker({
-        types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
-      });
-      if (await connect(h)) saveHandle(h);
-    } catch { /* user cancelled */ }
+    await openFolder();
   });
 
   // Auto-refresh so the AIs' edits appear without touching anything.
   setInterval(() => { void refresh().catch(() => {}); }, 2000);
 
-  // Reconnect the previous file (browser requires one click to re-grant).
-  loadHandle().then(async (h) => {
-    if (!h) return;
-    if ((await h.queryPermission({ mode: 'readwrite' })) === 'granted') {
-      void connect(h);
+  // Reconnect the previous folder (browser requires one click to re-grant).
+  idbGet('dir').then(async (dir) => {
+    if (!dir) return;
+    if ((await dir.queryPermission({ mode: 'readwrite' })) === 'granted') {
+      dirHandle = dir;
+      const name = (await idbGet('lastFile')) || 'checklist.md';
+      try {
+        await connect(await dir.getFileHandle(name), dir);
+      } catch { /* file gone; user picks manually */ }
     } else {
-      reconnectHandle = h;
-      $('open').textContent = 'Reconnect last file';
+      reconnectDir = dir;
+      $('open').textContent = 'Reconnect last folder';
     }
   });
 })();
