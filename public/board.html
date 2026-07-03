@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>CMF Todo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #141517;
+    --surface: #1d1e21;
+    --surface2: #26272b;
+    --text: #e8e8ea;
+    --subtext: #9a9ba1;
+    --accent: #6650fa;
+    --green: #4fc07a;
+    --amber: #e0a83c;
+    --red: #e06060;
+    --border: #303136;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 { font-size: 14px; font-weight: 600; margin: 0; flex: 1; }
+  #status { color: var(--subtext); font-size: 12px; }
+  #saved { color: var(--green); font-size: 12px; opacity: 0; transition: opacity 0.3s; }
+  #saved.show { opacity: 1; }
+  button {
+    background: var(--accent); color: #fff; border: 0;
+    padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+  }
+  button.secondary { background: var(--surface2); color: var(--text); }
+  main { max-width: 860px; margin: 0 auto; padding: 20px 20px 80px; }
+  #empty { margin-top: 15vh; text-align: center; color: var(--subtext); }
+  #empty p { max-width: 440px; margin: 12px auto; }
+  h2.md { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+  h1.md { font-size: 20px; font-weight: 700; margin: 8px 0 12px; }
+  p.md { color: var(--subtext); font-size: 12.5px; margin: 4px 0; }
+  .item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 12px; margin: 4px 0;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .item.checked { opacity: 0.55; }
+  .item.checked .editable { text-decoration: line-through; text-decoration-color: var(--subtext); }
+  .item input[type="checkbox"] {
+    appearance: none; flex-shrink: 0; margin-top: 2px;
+    width: 17px; height: 17px; border-radius: 5px;
+    border: 1.5px solid var(--subtext); background: transparent; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .item input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); }
+  .item input[type="checkbox"]:checked::after {
+    content: ""; width: 9px; height: 5px;
+    border-left: 2px solid #fff; border-bottom: 2px solid #fff;
+    transform: translateY(-1px) rotate(-45deg);
+  }
+  .editable { min-width: 0; flex: 1; outline: none; border-radius: 6px; }
+  .editable:focus {
+    background: var(--surface2);
+    box-shadow: 0 0 0 2px var(--accent);
+    text-decoration: none !important;
+  }
+  h1.md .editable, h2.md .editable, p.md .editable { display: block; padding: 1px 4px; margin: -1px -4px; }
+  .marker.done { color: var(--green); }
+  .marker.progress { color: var(--amber); }
+  .marker.blocked { color: var(--red); }
+  #agents {
+    display: flex; flex-direction: column; gap: 6px;
+    margin: 14px 0 4px; padding: 10px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; font-size: 12.5px;
+  }
+  #agents .lane { display: flex; gap: 8px; min-width: 0; }
+  #agents .who { flex-shrink: 0; width: 64px; font-weight: 600; }
+  #agents .who.claude { color: var(--accent); }
+  #agents .who.codex { color: var(--amber); }
+  #agents .what {
+    min-width: 0; color: var(--subtext);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #agents .rule { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
+  #raw {
+    display: none; width: 100%; min-height: 70vh;
+    background: var(--surface); color: var(--text);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; font: 12.5px/1.5 ui-monospace, Menlo, monospace;
+    outline: none; resize: vertical;
+  }
+  .hint { color: var(--subtext); font-size: 11.5px; margin: 14px 4px 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>CMF Todo</h1>
+  <span id="saved">saved</span>
+  <span id="status">no file</span>
+  <button id="rawBtn" class="secondary" hidden>Raw</button>
+  <button id="open">Open checklist .md</button>
+</header>
+<main>
+  <div id="empty">
+    <h2>Open the checklist</h2>
+    <p>Pick <code>~/Downloads/cmf-july-2-handoff-checklist.md</code> (Jul 2 handoff
+    follow-ups) or <code>~/Downloads/cmf-july-1-checklist.md</code> (in-flight items).
+    Everything is editable
+    in place — text edits, checkbox clicks, new items — and every change is written
+    straight back into the markdown, which stays the single source of truth for you
+    and both AIs.</p>
+    <p>The page re-reads the file every couple of seconds (paused while you type),
+    so AI updates appear on their own.</p>
+  </div>
+  <div id="agents" hidden></div>
+  <div id="doc" hidden></div>
+  <textarea id="raw" spellcheck="false"></textarea>
+  <p class="hint" id="hint" hidden>Click any text to edit — saves as you type ·
+  Enter in an item adds a new one below · Backspace on an empty item deletes it ·
+  Raw = edit the whole file</p>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  let handle = null;
+  let lastModified = 0;
+  let lastInputAt = 0;
+  let rawMode = false;
+
+  // --- handle persistence (best effort; file:// origins can be finicky) ---
+  const idb = () => new Promise((res, rej) => {
+    const r = indexedDB.open('cmf-todo', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('kv');
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  const saveHandle = async (h) => {
+    try {
+      (await idb()).transaction('kv', 'readwrite').objectStore('kv').put(h, 'handle');
+    } catch { /* non-fatal */ }
+  };
+  const loadHandle = async () => {
+    try {
+      const db = await idb();
+      return await new Promise((res) => {
+        const g = db.transaction('kv').objectStore('kv').get('handle');
+        g.onsuccess = () => res(g.result ?? null);
+        g.onerror = () => res(null);
+      });
+    } catch { return null; }
+  };
+
+  const setStatus = (t) => { $('status').textContent = t; };
+  const flashSaved = () => {
+    $('saved').classList.add('show');
+    setTimeout(() => $('saved').classList.remove('show'), 900);
+  };
+
+  const escapeHtml = (s) =>
+    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // Style the protocol markers without altering the underlying text. Markers
+  // carry attribution (→ 🤖 Claude: done … / → 🤖 Codex: in progress).
+  const decorate = (s) =>
+    escapeHtml(s)
+      .replace(
+        /(→ 🤖 [^→]*)/g,
+        (m) =>
+          `<span class="marker ${m.includes('done') ? 'done' : 'progress'}">${m}</span>`
+      )
+      .replace(/(→ ❓ [^→]*)/g, '<span class="marker blocked">$1</span>');
+
+  const readFileText = async () => (await handle.getFile()).text();
+  const writeFileText = async (text) => {
+    const w = await handle.createWritable();
+    await w.write(text);
+    await w.close();
+    lastModified = (await handle.getFile()).lastModified;
+    flashSaved();
+  };
+
+  // Replace one line on disk, locating it by its last-known content so a
+  // concurrent AI append elsewhere in the file can't be clobbered.
+  const replaceLine = async (meta, newLine) => {
+    const fresh = (await readFileText()).split('\n');
+    const i = fresh[meta.index] === meta.original
+      ? meta.index
+      : fresh.indexOf(meta.original);
+    if (i === -1) {
+      // The AI rewrote this exact line while it was being edited — rare;
+      // reload rather than guess.
+      setStatus('line changed on disk — reloaded');
+      lastModified = 0;
+      await refresh(true);
+      return false;
+    }
+    fresh[i] = newLine;
+    await writeFileText(fresh.join('\n'));
+    meta.index = i;
+    meta.original = newLine;
+    return true;
+  };
+
+  const spliceLines = async (meta, deleteCount, insert) => {
+    const fresh = (await readFileText()).split('\n');
+    const i = fresh[meta.index] === meta.original
+      ? meta.index
+      : fresh.indexOf(meta.original);
+    if (i === -1) { lastModified = 0; await refresh(true); return -1; }
+    fresh.splice(i + (deleteCount ? 0 : 1), deleteCount, ...insert);
+    await writeFileText(fresh.join('\n'));
+    return deleteCount ? i : i + 1;
+  };
+
+  const cleanText = (el) => el.innerText.replace(/\n+/g, ' ').trimEnd();
+
+  // Debounced save-as-you-type, per element.
+  const bindEditable = (el, save) => {
+    let t = 0;
+    el.addEventListener('input', () => {
+      lastInputAt = Date.now();
+      clearTimeout(t);
+      t = setTimeout(() => void save(), 700);
+    });
+    el.addEventListener('blur', () => {
+      clearTimeout(t);
+      void save().then(() => {
+        // Re-apply marker colors lost while typing plain text.
+        el.innerHTML = decorate(cleanText(el));
+      });
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); el.blur(); }
+    });
+  };
+
+  // "Who's on what" strip: derived live from the in-progress markers.
+  const renderAgents = (lines) => {
+    const busy = { Claude: [], Codex: [] };
+    for (const line of lines) {
+      const m = line.match(
+        /^\s*- \[[ xX]\]\s*(.*?)\s*→ 🤖 (Claude|Codex): in progress/
+      );
+      if (m) busy[m[2]].push(m[1].replace(/✅|⚠️|🔨|🔴/gu, '').trim());
+    }
+    const lane = (who, cls) => `
+      <div class="lane">
+        <span class="who ${cls}">${who}</span>
+        <span class="what">${
+          busy[who].length
+            ? escapeHtml(busy[who].join('  ·  '))
+            : 'nothing in progress'
+        }</span>
+      </div>`;
+    $('agents').innerHTML =
+      lane('Claude', 'claude') +
+      lane('Codex', 'codex') +
+      `<div class="rule">General rule: Claude (Fable) takes the hard/architectural items · Codex takes the easier, self-contained ones · only Amy checks boxes</div>`;
+    $('agents').hidden = rawMode;
+  };
+
+  const render = (lines) => {
+    const doc = $('doc');
+    doc.hidden = rawMode;
+    $('empty').hidden = true;
+    $('hint').hidden = false;
+    renderAgents(lines);
+    const frag = document.createDocumentFragment();
+    lines.forEach((line, index) => {
+      const meta = { index, original: line };
+
+      const item = line.match(/^(\s*- \[)([ xX])(\]\s*)(.*)$/);
+      if (item) {
+        const [, pre, state, post] = item;
+        const row = document.createElement('div');
+        row.className = 'item' + (state !== ' ' ? ' checked' : '');
+        const box = document.createElement('input');
+        box.type = 'checkbox';
+        box.checked = state !== ' ';
+        box.title = 'A check means Amy tested + verified';
+        const text = document.createElement('div');
+        text.className = 'editable';
+        text.contentEditable = 'plaintext-only';
+        text.innerHTML = decorate(item[4]);
+        const lineFor = (checked) => pre + (checked ? 'x' : ' ') + post + cleanText(text);
+        box.addEventListener('change', async () => {
+          row.classList.toggle('checked', box.checked);
+          await replaceLine(meta, lineFor(box.checked));
+        });
+        bindEditable(text, () => replaceLine(meta, lineFor(box.checked)));
+        text.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            await replaceLine(meta, lineFor(box.checked));
+            const at = await spliceLines(meta, 0, [pre.replace(/\S.*$/, '') + '- [ ]  🔨 ']);
+            if (at !== -1) { lastModified = 0; await refresh(true, at); }
+          }
+          if (e.key === 'Backspace' && cleanText(text) === '') {
+            e.preventDefault();
+            if (await spliceLines(meta, 1, []) !== -1) {
+              lastModified = 0;
+              await refresh(true);
+            }
+          }
+        });
+        row.append(box, text);
+        frag.append(row);
+        return;
+      }
+
+      const h = line.match(/^(#{1,3}) (.*)$/);
+      if (h) {
+        const el = document.createElement(h[1].length === 1 ? 'h1' : 'h2');
+        el.className = 'md';
+        const text = document.createElement('span');
+        text.className = 'editable';
+        text.contentEditable = 'plaintext-only';
+        text.textContent = h[2];
+        bindEditable(text, () => replaceLine(meta, h[1] + ' ' + cleanText(text)));
+        el.append(text);
+        frag.append(el);
+        return;
+      }
+
+      if (line.trim() !== '') {
+        const p = document.createElement('p');
+        p.className = 'md';
+        const text = document.createElement('span');
+        text.className = 'editable';
+        text.contentEditable = 'plaintext-only';
+        text.innerHTML = decorate(line);
+        bindEditable(text, () => replaceLine(meta, cleanText(text)));
+        p.append(text);
+        frag.append(p);
+      }
+    });
+    doc.replaceChildren(frag);
+  };
+
+  const refresh = async (force = false, focusItemAt = -1) => {
+    if (!handle) return;
+    // Don't repaint under an in-flight edit.
+    if (!force && (Date.now() - lastInputAt < 2000 || $('doc').contains(document.activeElement) || rawMode)) return;
+    const file = await handle.getFile();
+    if (!force && file.lastModified === lastModified) return;
+    lastModified = file.lastModified;
+    render((await file.text()).split('\n'));
+    setStatus('updated ' + new Date(file.lastModified).toLocaleTimeString());
+    if (focusItemAt !== -1) {
+      const editables = $('doc').querySelectorAll('.item .editable');
+      // Focus the freshly inserted item (indices count checkbox items only, so
+      // walk by matching empty new-item text).
+      for (const el of editables) {
+        if (cleanText(el) === '🔨') { el.focus(); break; }
+      }
+    }
+  };
+
+  // --- raw mode: whole-file textarea for bulk edits/moves ---
+  $('rawBtn').addEventListener('click', async () => {
+    const raw = $('raw');
+    if (!rawMode) {
+      raw.value = await readFileText();
+      rawMode = true;
+      raw.style.display = 'block';
+      $('doc').hidden = true;
+      $('agents').hidden = true;
+      $('rawBtn').textContent = 'Done';
+      raw.focus();
+    } else {
+      await writeFileText(raw.value);
+      rawMode = false;
+      raw.style.display = 'none';
+      $('rawBtn').textContent = 'Raw';
+      lastModified = 0;
+      await refresh(true);
+    }
+  });
+  let rawT = 0;
+  $('raw').addEventListener('input', () => {
+    clearTimeout(rawT);
+    rawT = setTimeout(() => void writeFileText($('raw').value), 900);
+  });
+
+  const connect = async (h) => {
+    const perm = await h.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') return false;
+    handle = h;
+    lastModified = 0;
+    await refresh(true);
+    $('rawBtn').hidden = false;
+    $('open').textContent = 'Open another file';
+    return true;
+  };
+
+  // One button, two modes: re-grant access to the remembered file, or pick one.
+  let reconnectHandle = null;
+  $('open').addEventListener('click', async () => {
+    if (reconnectHandle) {
+      const h = reconnectHandle;
+      reconnectHandle = null;
+      if (await connect(h)) return;
+      $('open').textContent = 'Open checklist .md';
+      return;
+    }
+    try {
+      const [h] = await window.showOpenFilePicker({
+        types: [{ description: 'Markdown', accept: { 'text/markdown': ['.md'] } }],
+      });
+      if (await connect(h)) saveHandle(h);
+    } catch { /* user cancelled */ }
+  });
+
+  // Auto-refresh so the AIs' edits appear without touching anything.
+  setInterval(() => { void refresh().catch(() => {}); }, 2000);
+
+  // Reconnect the previous file (browser requires one click to re-grant).
+  loadHandle().then(async (h) => {
+    if (!h) return;
+    if ((await h.queryPermission({ mode: 'readwrite' })) === 'granted') {
+      void connect(h);
+    } else {
+      reconnectHandle = h;
+      $('open').textContent = 'Reconnect last file';
+    }
+  });
+})();
+</script>
+</body>
+</html>
