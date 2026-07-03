@@ -1,7 +1,9 @@
 # Agent operating instructions — {{NAME}}
 
 You are one of several agents (plus a human) working `checklist.md` in this folder. Read this
-whole file before touching anything.
+whole file before touching anything. The human's kickoff message tells you YOUR name (e.g.
+"you're Codex") — sign every marker with it, and find your role by it on the checklist's
+`Rules:` line.
 
 1. **The checklist is the single source of truth.** Read it before starting; re-read it
    immediately before every write.
