@@ -77,8 +77,14 @@
   .m-q { color: var(--red); }
   .m-fb { color: var(--accent); }
   .board-demo .m-done, .board-demo .m-prog, .board-demo .m-q, .board-demo .m-fb {
-    display: block; margin-top: 3px; padding-left: 14px;
+    display: block; margin-top: 4px; padding-left: 14px;
   }
+  .dpill {
+    display: inline-block; padding: 0 7px; border-radius: 999px;
+    font-weight: 700; font-size: 11px; line-height: 1.55; color: #141517; white-space: nowrap;
+  }
+  .dpill.dyou { background: #a495ff; }
+  .dpill.dattn { background: var(--red); color: #fff; }
   .fine { color: var(--subtext); font-size: 13.5px; }
   .paste-wrap { position: relative; }
   .paste-wrap pre {
@@ -101,46 +107,57 @@
 <main>
   <div class="hero">
     <h1><span>tandem</span></h1>
-    <p>A shared checklist between you and your AI agents — one markdown file, on your machine,
-    that everyone reads and writes. Agents leave attributed markers; you check the boxes.</p>
+    <p>Your AI agents do the work. You check it off. One checklist, in one markdown file on
+    your computer — agents write their updates into it, you review in the browser.</p>
     <div class="cta">
-      <a class="btn" href="/board">Open the board</a>
-      <a class="btn secondary" href="/protocol">Read the protocol</a>
-      <span class="note">Chromium browsers only (Chrome, Edge, Arc) — the board edits local files.</span>
+      <a class="btn" href="/board?demo">Try the demo</a>
+      <a class="btn secondary" href="/board">Open the board</a>
+      <a class="btn secondary" href="/protocol">Protocol</a>
+      <span class="note">Real files need a Chromium browser (Chrome, Edge, Arc) — the demo works anywhere.</span>
     </div>
   </div>
 
   <h2>How it works</h2>
   <ol class="steps">
-    <li><div><b>Start from notes</b>
-      <span>A meeting transcript, a brain-dump, a plan — anything. Your AI distills it into a
-      checklist file (or click "New checklist" on the board for a blank one).</span></div></li>
-    <li><div><b>The file is the board</b>
-      <span>One <code>checklist.md</code> in a project folder, with <code>decisions.md</code>,
-      <code>archive.md</code>, and <code>agents.md</code> beside it. No server — it lives on your machine.</span></div></li>
-    <li><div><b>Agents work it under rules</b>
-      <span>Point any agent (Claude, Codex, …) at <code>agents.md</code>. They claim items with
-      in-progress markers, report with done markers, and ask you questions with ❓ — never touching
-      your checkboxes.</span></div></li>
-    <li><div><b>You verify in the browser</b>
-      <span>The board re-reads the file every couple of seconds: agent updates just appear. Check
-      what you've verified, cross out what's dead, type feedback right on an item.</span></div></li>
+    <li><div><b>Dump your notes</b>
+      <span>Your AI turns a meeting transcript or a brain-dump into a checklist file on your
+      computer.</span></div></li>
+    <li><div><b>Agents work the list</b>
+      <span>Every update lands on the item with a colored name badge, so you always see who did
+      what.</span></div></li>
+    <li><div><b>You review</b>
+      <span>Good? Check it off — it sinks to the bottom. Not quite? Hit 💬 and say what to fix;
+      the agent replies on the same item.</span></div></li>
+    <li><div><b>Repeat until done</b>
+      <span>Updates appear on the board by themselves, and the whole history stays in one .md
+      file you can open anywhere.</span></div></li>
   </ol>
 
   <h2>What the board looks like</h2>
   <div class="board-demo">
+    <div class="demo-item"><div class="demo-box"></div>
+      <div>Fix the login redirect loop
+        <span class="m-done"><span class="dpill" style="background:#e8b23d">🤖 Fable</span> done — stale cookie guard, commit 41c9a2</span>
+        <span class="m-fb"><span class="dpill dyou">💬</span> works! double-check private browsing too</span>
+        <span class="m-done"><span class="dpill" style="background:#e8b23d">🤖 Fable</span> done — private browsing fixed too, commit 8ba21f</span>
+      </div></div>
+    <div class="demo-item"><div class="demo-box"></div>
+      <div>Empty-state illustration for the dashboard
+        <span class="m-prog"><span class="dpill" style="background:#45c4f5">🤖 Codex</span> in progress — building the SVG variants</span>
+      </div></div>
+    <div class="demo-item"><div class="demo-box"></div>
+      <div>Pricing page copy
+        <span class="m-q"><span class="dpill dattn">❓ Fable</span> two tones drafted — playful or corporate?</span>
+      </div></div>
     <div class="demo-item done-item"><div class="demo-box checked"></div>
-      <div class="t">Fix login redirect loop <span class="m-done">→ 🤖 Fable: done — root cause was a stale cookie guard, commit 41c9a2</span></div></div>
-    <div class="demo-item"><div class="demo-box"></div>
-      <div>Empty-state illustration for the dashboard <span class="m-prog">→ 🤖 Codex: in progress — building the SVG variants</span> <span class="m-fb">→ 💬 keep it playful, like the 404 page</span></div></div>
-    <div class="demo-item"><div class="demo-box"></div>
-      <div>🔴 Pricing page copy <span class="m-q">→ ❓ Fable: two tones drafted — playful or corporate?</span></div></div>
+      <div class="t">New footer with the updated legal links
+        <span class="m-done"><span class="dpill" style="background:#45c4f5">🤖 Codex</span> done — commit 9e3d17</span>
+      </div></div>
   </div>
-  <p class="fine">Green = done, awaiting your check · amber = claimed and in flight · red = a
-  question waiting for you · purple 💬 = your feedback to the agents (every board item has a 💬
-  button). Checked items sink to the bottom of their section automatically. The "who's on what"
-  strip at the top of the board is derived live from these markers — and every agent's name
-  gets its own color, so you always know who did what.</p>
+  <p class="fine">Badges say <strong>who</strong> (each agent its own color · purple 💬 is you ·
+  red needs your answer). Text after a badge says <strong>where it stands</strong> (green done,
+  amber in progress). Checked items sink to the bottom on their own.</p>
+  <p><a class="btn" href="/board?demo">Try this exact board — live demo</a></p>
 
   <h2>For your AI</h2>
   <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any

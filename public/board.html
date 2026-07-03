@@ -205,7 +205,7 @@
   let lastInputAt = 0;
   let rawMode = false;
 
-  if (!window.showOpenFilePicker) {
+  if (!window.showOpenFilePicker && !DEMO) {
     $('empty').innerHTML =
       '<h2>Browser not supported</h2><p>The board needs the File System Access API — ' +
       'open this page in a Chromium browser (Chrome, Edge, Arc).</p>';
@@ -292,8 +292,46 @@
         `</span>`
       );
 
-  const readFileText = async () => (await handle.getFile()).text();
+  // /board?demo — the real board over an in-memory file; nothing persists.
+  const DEMO = new URLSearchParams(location.search).has('demo');
+  let demoText = null;
+  let demoRendered = false;
+  const DEMO_MD = `# Tandem Demo
+
+Started 2026-07-03 · this is the live demo — click around, nothing is saved · decisions: \`decisions.md\` · agent rules: \`agents.md\`
+
+Rules: only humans check boxes · agents append attributed markers · hard/architectural → Fable, self-contained → Codex.
+
+---
+
+## 1 · Verify (done — awaiting human check)
+
+- [ ]  🔨 Fix the login redirect loop on Safari → 🤖 Fable: done — root cause was a stale cookie guard; commit 41c9a2. → 💬 works! double-check private browsing too → 🤖 Fable: done — private browsing fixed too; commit 8ba21f.
+- [ ]  🔨 New empty-state illustration on the dashboard → 🤖 Codex: done — three variants in /assets/empty; picked the telescope one. → 💬 love it, but try it in the brand purple
+- [x]  🔨 New footer with the updated legal links → 🤖 Codex: done — commit 9e3d17.
+- [x]  🔨 Compress the hero images → 🤖 Fable: done — 4.1 MB → 610 KB, commit c07d33.
+
+## 2 · Discuss (needs a human/team decision)
+
+- [ ]  🔴 Pricing page copy — two tones drafted → ❓ Fable: playful ("plans that grow with you") or corporate ("enterprise-grade from day one")?
+- [ ]  🔴 Should the changelog live on the site or in the app?
+
+## 3 · Later (parked, no action now)
+
+- [ ]  Dark-mode pass on the marketing pages → 🤖 Codex: in progress — auditing which pages hardcode colors
+- [ ]  Replace hero video with a lighter animation ⚠️ HOLD Fable nav.css — shared with the header work
+- [ ]  Newsletter signup A/B test
+`;
+
+  const readFileText = async () =>
+    demoText !== null ? demoText : (await handle.getFile()).text();
   const writeFileText = async (text) => {
+    if (demoText !== null) {
+      demoText = text;
+      demoRendered = false;
+      flashSaved();
+      return;
+    }
     const w = await handle.createWritable();
     await w.write(text);
     await w.close();
@@ -514,6 +552,13 @@
   };
 
   const refresh = async (force = false, focusItemAt = -1) => {
+    if (demoText !== null) {
+      if (!force && (demoRendered || Date.now() - lastInputAt < 2000 || $('doc').contains(document.activeElement) || rawMode)) return;
+      demoRendered = true;
+      render(demoText.split('\n'));
+      setStatus("demo — edits aren't saved");
+      return;
+    }
     if (!handle) return;
     // Don't repaint under an in-flight edit.
     if (!force && (Date.now() - lastInputAt < 2000 || $('doc').contains(document.activeElement) || rawMode)) return;
@@ -598,6 +643,7 @@
   const connect = async (h) => {
     const perm = await h.requestPermission({ mode: 'readwrite' });
     if (perm !== 'granted') return false;
+    demoText = null;
     handle = h;
     lastModified = 0;
     await refresh(true);
@@ -708,9 +754,19 @@ whole file before touching anything.
   // Auto-refresh so the AIs' edits appear without touching anything.
   setInterval(() => { void refresh().catch(() => {}); }, 2000);
 
+  if (DEMO) {
+    demoText = DEMO_MD;
+    $('rawBtn').hidden = false;
+    if (!window.showOpenFilePicker) {
+      $('open').disabled = true;
+      $('new').disabled = true;
+    }
+    void refresh(true);
+  }
+
   // Restore the tab strip; auto-open the last file if permission survived,
   // otherwise one click on a tab re-grants it.
-  idbGet('tabs').then(async (saved) => {
+  if (!DEMO) idbGet('tabs').then(async (saved) => {
     if (!saved || !saved.length) return;
     tabs = saved;
     const last = await idbGet('lastFile');
