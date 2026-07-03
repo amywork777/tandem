@@ -108,6 +108,19 @@
     padding: 14px 16px; margin-top: 14px; font-size: 13.5px; color: var(--subtext);
   }
   .callout b { color: var(--text); }
+  .ritual { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .rit {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .rit .rit-who { margin-bottom: 10px; }
+  .rit .say {
+    display: block; background: var(--surface2); border-radius: 8px;
+    padding: 8px 10px; font-size: 12px; color: var(--text);
+    font-family: ui-monospace, Menlo, monospace;
+  }
+  .rit p { color: var(--subtext); font-size: 12.5px; margin: 10px 0 0; }
+  code.inline { background: var(--surface2); border-radius: 5px; padding: 1px 5px; font-size: 11.5px; }
   .cap {
     margin-left: auto; flex-shrink: 0; align-self: center; padding-left: 12px;
     max-width: 150px; text-align: right;
@@ -224,6 +237,30 @@
   running two copies of the same one? Give them unique names
   (<code>Codex-1</code>, <code>Codex-2</code>) in their kickoff lines, and each gets its own
   badge and lane.</div>
+
+  <h2>The whole ritual, day to day</h2>
+  <div class="ritual">
+    <div class="rit">
+      <div class="rit-who"><span class="dpill" style="background:#e8b23d">🤖 to Claude Code</span></div>
+      <code class="say">/tandem new board from my meeting notes</code>
+      <p>Builds the project, fills the board, hands you the link. Next session:
+      <code class="inline">/tandem resume</code> and it picks up where it left off.
+      (Skill lives in <a href="https://github.com/amywork777/tandem">the repo</a> —
+      <code class="inline">cp -r skill ~/.claude/skills/tandem</code>, once.)</p>
+    </div>
+    <div class="rit">
+      <div class="rit-who"><span class="dpill" style="background:#45c4f5">🤖 to any other agent</span></div>
+      <code class="say">you're Codex — read agents.md in this folder and pick up your work</code>
+      <p>One kickoff line per agent. No file access? Paste the block below instead — same
+      rules, zero setup.</p>
+    </div>
+    <div class="rit">
+      <div class="rit-who"><span class="dpill dyou">🧍 for you</span></div>
+      <code class="say">bookmark /board</code>
+      <p>Your file tabs persist between visits. Check what's good, 💬 what isn't, and get on
+      with your day while the crew pedals.</p>
+    </div>
+  </div>
 
   <h2>For your AI</h2>
   <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any
