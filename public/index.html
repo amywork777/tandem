@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <title>tandem — a shared checklist for you and your AI agents</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9A%B2%3C/text%3E%3C/svg%3E" />
 <meta name="description" content="One markdown file on your machine, worked by you and your AI agents together under a simple protocol." />
 <style>
   :root {
@@ -28,7 +29,9 @@
   }
   main { max-width: 720px; margin: 0 auto; padding: 64px 24px 80px; }
   a { color: var(--accent); }
-  .hero h1 { font-size: 40px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .hero .bike { display: block; margin-bottom: 10px; }
+  .hero h1 { font-size: 40px; margin: 0 0 2px; letter-spacing: -0.5px; }
+  .hero .tagline { font-size: 19px; color: var(--text); font-weight: 600; margin: 0 0 10px; }
   .hero h1 span { color: var(--accent); }
   .hero p { font-size: 17px; color: var(--subtext); margin: 0 0 26px; max-width: 56ch; }
   .cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
@@ -127,9 +130,29 @@
 <body>
 <main>
   <div class="hero">
+    <svg class="bike" viewBox="0 0 200 84" width="210" aria-hidden="true">
+      <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="28" cy="60" r="19" stroke="#3a3b41"/>
+        <circle cx="172" cy="60" r="19" stroke="#3a3b41"/>
+        <g stroke="var(--accent)">
+          <path d="M28 60 L58 28 L112 28 L86 60 Z"/>
+          <path d="M112 28 L144 28 L118 60 L86 60"/>
+          <path d="M144 28 L172 60"/>
+          <path d="M58 28 L54 16"/>
+          <path d="M112 28 L108 16"/>
+          <path d="M144 28 L146 14 L156 12"/>
+        </g>
+        <path d="M46 16 L62 16" stroke="#e8b23d" stroke-width="5"/>
+        <path d="M100 16 L116 16" stroke="#a495ff" stroke-width="5"/>
+        <circle cx="86" cy="60" r="4" stroke="var(--accent)"/>
+        <circle cx="118" cy="60" r="4" stroke="var(--accent)"/>
+      </g>
+    </svg>
     <h1><span>tandem</span></h1>
-    <p>Your AI agents do the work. You check it off. One checklist, in one markdown file on
-    your computer — agents write their updates into it, you review in the browser.</p>
+    <p class="tagline">You steer. Your agents pedal.</p>
+    <p>One checklist, in one markdown file on your computer. Your AI agents write their work
+    into it; you review in the browser and check things off. Like a tandem bike: they provide
+    the power, you set the direction.</p>
     <div class="cta">
       <a class="btn" href="/board?demo">Try the demo</a>
       <a class="btn secondary" href="/board">Open the board</a>
@@ -164,7 +187,7 @@
   amber in progress). Checked items sink to the bottom on their own.</p>
   <p><a class="btn" href="/board?demo">Try this exact board — live demo</a></p>
 
-  <h2>How it works</h2>
+  <h2>How the ride works</h2>
   <ol class="steps">
     <li><div><b>Dump your notes<span class="actor ayou">you</span></b>
       <span>Your AI turns a meeting transcript or a brain-dump into a checklist file on your
@@ -222,7 +245,8 @@ Start now: read checklist.md, then tell the human (a) what&#x27;s waiting on the
   </div>
 
   <footer>
-    tandem · local-first, no accounts, no tracking · <a href="/protocol">protocol</a>
+    tandem 🚲 you steer, your agents pedal · local-first, no accounts, no tracking ·
+    <a href="/protocol">rules of the road</a>
   </footer>
 </main>
 
