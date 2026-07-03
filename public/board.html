@@ -80,7 +80,14 @@
   .marker.progress { color: var(--amber); }
   .marker.blocked { color: var(--red); }
   .marker.feedback { color: var(--you); font-weight: 500; }
-  .marker.who { font-weight: 700; }
+  .marker-arrow { color: var(--subtext); }
+  .pill {
+    display: inline-block; padding: 0 7px; border-radius: 999px;
+    font-weight: 700; font-size: 11.5px; line-height: 1.55;
+    color: #141517; white-space: nowrap;
+  }
+  .pill.you { background: var(--you); }
+  .pill.attn { background: var(--red); color: #fff; }
   .item .fb {
     background: none; border: 0; padding: 0 2px; cursor: pointer;
     font-size: 13px; line-height: 1.4; opacity: 0.4; flex-shrink: 0;
@@ -175,10 +182,10 @@
       <li><code>⚠️ HOLD Name topic</code> shared-file lock</li>
       <li><code>→ 💬 note</code> your feedback — the 💬 button on any item adds one</li>
     </ul>
-    <p><strong>Who's who</strong> — purple is YOU (your checkmarks and 💬 feedback). Every
-    agent gets its own color, used for its name on items and its lane in the strip up top.
-    Marker text color = status: green done (waiting on your check), amber in progress, red
-    needs your answer.</p>
+    <p><strong>Who's who</strong> — every name is a colored badge. Agents each get their own
+    badge color, the same on items and in the strip up top. The purple 💬 badge is YOU. Red
+    badges (❓ question, ⚠️ HOLD) need your attention. Text after a badge = status: green done
+    (waiting on your check), amber in progress.</p>
     <p><strong>Checked items sink</strong> to the bottom of their section (display only — the
     file keeps your order).</p>
     <p><strong>Files</strong> — <code>checklist.md</code> (Verify / Discuss / Later),
@@ -241,7 +248,7 @@
   // One color per participant, everywhere: purple is reserved for the human
   // (checkmarks + 💬), red for attention (❓/HOLD); agents draw from the rest
   // in order of first appearance.
-  const AGENT_PALETTE = ['#e0a83c', '#4fb3d9', '#4fc07a', '#d970c1', '#c8b45a'];
+  const AGENT_PALETTE = ['#e8b23d', '#45c4f5', '#f06bb8', '#8ee06b', '#e88b5a'];
   const agentColorMap = new Map();
   const agentColor = (name) => {
     if (!agentColorMap.has(name)) {
@@ -253,22 +260,28 @@
   // carry attribution (→ 🤖 Claude: done … / → 🤖 Codex: in progress).
   const decorate = (s) =>
     escapeHtml(s)
-      .replace(/(→ 🤖 )(\S+)(:)([^→]*)/g, (m, arrow, name, colon, rest) => {
+      .replace(/(→ )(🤖 )(\S+)(:)([^→]*)/g, (m, arrow, robot, name, colon, rest) => {
         const cls = /^\s*done\b/.test(rest) ? 'done' : 'progress';
         return (
-          `<span class="marker who" style="color:${agentColor(name)}">${arrow}${name}${colon}</span>` +
-          `<span class="marker ${cls}">${rest}</span>`
+          `<span class="marker-arrow">${arrow}</span>` +
+          `<span class="pill" style="background:${agentColor(name)}">${robot}${name}</span>` +
+          `<span class="marker ${cls}">${colon}${rest}</span>`
         );
       })
-      .replace(/(→ ❓ )(?:(\S+)(:))?([^→]*)/g, (m, arrow, name, colon, rest) =>
-        name
-          ? `<span class="marker blocked">${arrow}</span>` +
-            `<span class="marker who" style="color:${agentColor(name)}">${name}${colon}</span>` +
-            `<span class="marker blocked">${rest}</span>`
-          : `<span class="marker blocked">${arrow}${rest}</span>`
+      .replace(/(→ )(❓ )(?:(\S+)(:))?([^→]*)/g, (m, arrow, q, name, colon, rest) =>
+        `<span class="marker-arrow">${arrow}</span>` +
+        `<span class="pill attn">${q}${name ?? ''}</span>` +
+        `<span class="marker blocked">${colon ?? ''}${rest}</span>`
       )
-      .replace(/(⚠️ HOLD [^·→<]*)/g, '<span class="marker blocked">$1</span>')
-      .replace(/(→ 💬 [^→]*)/g, '<span class="marker feedback">$1</span>');
+      .replace(/(⚠️ HOLD )(\S+)([^·→<]*)/g, (m, hold, name, rest) =>
+        `<span class="pill attn">${hold}${name}</span>` +
+        `<span class="marker blocked">${rest}</span>`
+      )
+      .replace(/(→ )(💬)( ?[^→]*)/g, (m, arrow, bubble, rest) =>
+        `<span class="marker-arrow">${arrow}</span>` +
+        `<span class="pill you">${bubble}</span>` +
+        `<span class="marker feedback">${rest}</span>`
+      );
 
   const readFileText = async () => (await handle.getFile()).text();
   const writeFileText = async (text) => {
@@ -351,7 +364,7 @@
     const lanes = [...busy.entries()].map(
       ([who, items]) => `
       <div class="lane">
-        <span class="who" style="color:${agentColor(who)}">${escapeHtml(who)}</span>
+        <span class="who"><span class="pill" style="background:${agentColor(who)}">${escapeHtml(who)}</span></span>
         <span class="what">${escapeHtml(items.join('  ·  '))}</span>
       </div>`
     );
