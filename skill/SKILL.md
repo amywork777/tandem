@@ -18,15 +18,17 @@ Two flows. Pick by what the user asked for.
    project is about (one question).
 2. **Create the project folder.** Default `~/Checklists/<kebab-name>/` (create it). Let the
    user override.
-3. **Instantiate the four templates** from the repo's `templates/` directory (or reconstruct
+3. **Ask which agents are riding and their roles** (or take them from context) — e.g.
+   "Fable = planner, Codex = coder" — and write them into the checklist's `Rules:` line.
+4. **Instantiate the four templates** from the repo's `templates/` directory (or reconstruct
    from the shapes below), substituting `{{NAME}}` with the project name and `{{DATE}}` with
    today. Files: `checklist.md`, `decisions.md`, `archive.md`, `agents.md`.
-4. **Distill the notes into real items**, replacing the template examples:
+5. **Distill the notes into real items**, replacing the template examples:
    - **Verify** — empty at the start (it fills as agents finish work).
    - **Discuss** — open questions/decisions from the notes, one item each, `🔴` prefix.
    - **Later** — parked/deferred things from the notes.
    Every action item gets a checkbox line. Keep items one line; detail goes in `archive.md`.
-5. **Tell the user**: the folder path, "open the board and pick `checklist.md`" (their hosted
+6. **Tell the user**: the folder path, "open the board and pick `checklist.md`" (their hosted
    tandem URL, `/board`), and that other agents should be pointed at `agents.md`.
 
 ## Flow 2: `resume` — pick up an existing board
@@ -53,8 +55,10 @@ words. Inline notes addressed to you (e.g. "AMY: fix the wording") are work orde
 | `⚠️ HOLD Name <file or topic>` | Editing shared code — others keep off until edited away. |
 | `→ 💬 <note>` | Human feedback — a work order; respond under the same item. |
 
-**Division of labor**: architectural/risky items → the stronger agent; self-contained → the
-other. The in-progress marker IS the claim.
+**Division of labor**: the `Rules:` line at the top of checklist.md assigns roles (e.g.
+`roles: Fable = planner · Codex = coder`) — follow it, and re-read it each session (the human
+may reassign roles there at any time). No roles named? Default: architectural/risky → the
+stronger agent; self-contained → the other. The in-progress marker IS the claim.
 
 **Write safety — this is the one that bites**: the checklist file is HOT. The browser board
 writes it when the human edits, and other agents append to it. Therefore:

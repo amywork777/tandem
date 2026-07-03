@@ -2,7 +2,7 @@
 
 Started {{DATE}} · decisions: `decisions.md` · history: `archive.md` · agent rules: `agents.md`
 
-Rules: only humans check boxes · agents append attributed markers · hard/architectural → the stronger agent, self-contained → the other.
+Rules: only humans check boxes · agents append attributed markers · roles: name them here, e.g. Fable = planner (breaks down work, reviews) · Codex = coder (implements).
 
 ---
 

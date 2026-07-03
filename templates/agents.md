@@ -18,7 +18,9 @@ whole file before touching anything.
    touch; edit it away when done. Respect others' HOLDs.
 6. **Write safety:** the file is hot (a browser board and other agents write it). Write
    atomically (temp file + rename) from a fresh read. Never regenerate the file from memory.
-7. **Division of labor:** architectural/risky items → the stronger agent; self-contained →
-   the other. If unsure, ask via `→ ❓`.
+7. **Division of labor:** the `Rules:` line at the top of `checklist.md` assigns roles
+   (e.g. planner vs coder) — follow it, and re-read it each session (the human may reassign).
+   If no roles are named: architectural/risky → the stronger agent; self-contained → the
+   other. If unsure, ask via `→ ❓`.
 8. Decisions (with the WHY) go to `decisions.md`, numbered. Finished detail moves to
    `archive.md`. Keep the checklist short.

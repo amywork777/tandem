@@ -36,8 +36,12 @@ that safe and legible.
 
 ## Division of labor
 
-Architectural or risky items go to the stronger agent; self-contained items to the other.
-The in-progress marker IS the claim — no separate assignment step. One agent per item.
+**The `Rules:` line at the top of checklist.md assigns roles** — e.g.
+`roles: Fable = planner (breaks down work, reviews) · Codex = coder (implements)` — and agents
+follow it. The human can rewrite that line at any time, right on the board. When no roles are
+named, the default applies: architectural or risky items go to the stronger agent;
+self-contained items to the other. The in-progress marker IS the claim — no separate
+assignment step. One agent per item.
 
 ## Write safety
 
