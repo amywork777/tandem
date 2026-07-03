@@ -121,10 +121,16 @@
   .pill.you { background: var(--you); }
   .pill.attn { background: var(--red); color: #fff; }
   .item .fb {
-    background: none; border: 0; padding: 0 2px; cursor: pointer;
-    font-size: 13px; line-height: 1.4; opacity: 0.4; flex-shrink: 0;
+    display: inline-block; align-self: flex-start;
+    margin: 7px 0 0 14px; padding: 3px 12px;
+    background: none; border: 1px solid var(--border); border-radius: 999px;
+    color: var(--you); font-size: 12px; font-weight: 600;
+    cursor: pointer; opacity: 0.85;
   }
-  .item:hover .fb, .item .fb:focus { opacity: 1; }
+  .item .fb:hover, .item .fb:focus {
+    opacity: 1; border-color: var(--you);
+    background: color-mix(in srgb, var(--you) 12%, transparent);
+  }
   .fb-row { display: flex; gap: 8px; margin: 2px 0 8px 39px; }
   .fb-row input {
     flex: 1; min-width: 0; background: var(--surface2); color: var(--text);
@@ -652,8 +658,8 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         });
         const fb = document.createElement('button');
         fb.className = 'fb';
-        fb.title = 'Add feedback for the agents';
-        fb.textContent = '💬';
+        fb.title = 'Add feedback for the agents — lands at the end of this item\'s thread';
+        fb.textContent = '💬 Reply';
         fb.addEventListener('click', () => {
           const existing = row.nextElementSibling;
           if (existing && existing.classList.contains('fb-row')) {
@@ -685,7 +691,8 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           row.after(wrap);
           input.focus();
         });
-        row.append(box, col, fb);
+        col.append(fb);
+        row.append(box, col);
         if (box.checked) checkedRows.push(row);
         else frag.append(row);
         return;
