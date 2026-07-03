@@ -50,7 +50,8 @@ No build step, no dependencies; every page is self-contained.
 
 ```bash
 python3 -m http.server -d public   # local dev at http://localhost:8000
-node tools/smoke.js                 # render smoke test — run before every deploy
+node tools/smoke.js                 # render smoke test + template drift check — run before every deploy
+node tools/sync-templates.js        # re-inline templates/ into board.html after editing them
 ```
 
 Deploy: any static host (`public/` is the site; `vercel.json` included). Design docs live in

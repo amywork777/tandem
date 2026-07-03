@@ -1,5 +1,9 @@
 # tandem — design spec
 
+> **Historical document** — the build as designed on day one. The product has since grown
+> (roles, activity stamps, threaded comments, file tabs, demo mode, per-section add/delete).
+> Current behavior: README.md + PROTOCOL.md + the live site.
+
 **Date:** 2026-07-03 · **Owner:** Amy · **Status:** approved design, pre-implementation
 
 ## What it is
