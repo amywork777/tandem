@@ -46,7 +46,19 @@
   main { max-width: 860px; margin: 0 auto; padding: 20px 20px 80px; }
   #empty { margin-top: 15vh; text-align: center; color: var(--subtext); }
   #empty p { max-width: 440px; margin: 12px auto; }
-  h2.md { font-size: 16px; font-weight: 600; margin: 28px 0 10px; }
+  h2.md {
+    font-size: 15px; font-weight: 650; margin: 30px 0 10px;
+    padding: 6px 12px; background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--accent); border-radius: 8px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2.md .count {
+    flex-shrink: 0; margin-left: auto; padding: 0 8px; border-radius: 999px;
+    background: var(--surface2); color: var(--subtext);
+    font-size: 11px; font-weight: 600; line-height: 1.7;
+  }
+  h2.md .count.clear { color: var(--green); }
+  hr.md { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
   h1.md { font-size: 20px; font-weight: 700; margin: 8px 0 12px; }
   p.md { color: var(--subtext); font-size: 12.5px; margin: 4px 0; }
   .item {
@@ -114,6 +126,15 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   #agents .rule { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
+  #agents .strip-label {
+    color: var(--subtext); font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.09em;
+  }
+  #agents .legend { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
+  #agents .legend .g { color: var(--green); }
+  #agents .legend .a { color: var(--amber); }
+  #agents .legend .r { color: var(--red); }
+  #agents .legend .y { color: var(--you); }
   #raw {
     display: none; width: 100%; min-height: 70vh;
     background: var(--surface); color: var(--text);
@@ -418,9 +439,15 @@ Rules: only humans check boxes · agents append attributed markers · hard/archi
     // The division-of-labor rule line comes from the file itself (template header).
     const rule = lines.find((l) => l.startsWith('Rules:'));
     $('agents').innerHTML =
+      `<div class="strip-label">Who's on what</div>` +
       (lanes.join('') ||
-        '<div class="lane"><span class="what">no agents in progress</span></div>') +
-      (rule ? `<div class="rule">${escapeHtml(rule)}</div>` : '');
+        '<div class="lane"><span class="what">no agents working right now</span></div>') +
+      (rule ? `<div class="rule">${escapeHtml(rule)}</div>` : '') +
+      `<div class="legend">☑ your check = accepted, done · ` +
+      `<span class="y">💬 your feedback</span> · ` +
+      `<span class="g">green = finished, waiting on your check</span> · ` +
+      `<span class="a">amber = in progress</span> · ` +
+      `<span class="r">red = needs your answer</span></div>`;
     $('agents').hidden = rawMode;
   };
 
@@ -531,7 +558,33 @@ Rules: only humans check boxes · agents append attributed markers · hard/archi
         text.textContent = h[2];
         bindEditable(text, () => replaceLine(meta, h[1] + ' ' + cleanText(text)));
         el.append(text);
+        if (h[1].length > 1) {
+          let open = 0;
+          let total = 0;
+          for (let j = index + 1; j < lines.length; j++) {
+            if (/^#{1,3} /.test(lines[j])) break;
+            const it = lines[j].match(/^\s*- \[([ xX])\]/);
+            if (it) {
+              total++;
+              if (it[1] === ' ') open++;
+            }
+          }
+          if (total) {
+            const count = document.createElement('span');
+            count.className = 'count' + (open ? '' : ' clear');
+            count.contentEditable = 'false';
+            count.textContent = open ? `${open} open` : 'all done ✓';
+            el.append(count);
+          }
+        }
         frag.append(el);
+        return;
+      }
+
+      if (/^-{3,}$/.test(line.trim())) {
+        const hr = document.createElement('hr');
+        hr.className = 'md';
+        frag.append(hr);
         return;
       }
 
