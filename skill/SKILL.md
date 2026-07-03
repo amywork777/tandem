@@ -62,6 +62,10 @@ order = chronology. Never leave a comment anywhere except on or directly under i
 | `⚠️ HOLD Name <file or topic>` | Editing shared code — others keep off until edited away. |
 | `→ 💬 <note>` | Human feedback — a work order; respond under the same item. |
 
+**Stamps**: end every marker with the time (`· HH:MM`, 24-hour). While working a long item,
+refresh your in-progress marker's stamp every ~10 minutes — updating your own stamp is the one
+allowed edit to an existing marker. The board shows liveness dots from these.
+
 **Division of labor**: the `Rules:` line at the top of checklist.md assigns roles (e.g.
 `roles: Fable = planner · Codex = coder`) — follow it, and re-read it each session (the human
 may reassign roles there at any time). No roles named? Default: architectural/risky → the

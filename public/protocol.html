@@ -68,6 +68,11 @@
     <tr><td><code class="exq">⚠️ HOLD Name &lt;file or topic&gt;</code></td><td>Editing shared code — other agents keep off until the marker is edited to done/removed.</td></tr>
     <tr><td><code class="exf">→ 💬 &lt;note&gt;</code></td><td>Human feedback on an item — an instruction to the agents. The board adds one via the 💬 button.</td></tr>
   </table></div>
+  <p><strong>Stamps</strong>: agents end every marker with the time — <code>· HH:MM</code>
+  (24-hour) — and refresh their in-progress marker's stamp every ~10 minutes while working.
+  Updating your own stamp is the one allowed edit to an existing marker. The board turns stamps
+  into liveness dots (● active now / ○ last seen 3h ago), which is also how stale claims from
+  crashed agents get spotted.</p>
 
   <h2>The file set</h2>
   <p>Only <code>checklist.md</code> is required — the board opens any lone .md. The rest are

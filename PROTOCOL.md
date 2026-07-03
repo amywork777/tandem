@@ -28,6 +28,11 @@ that safe and legible.
 | `⚠️ HOLD Name <file or topic>` | Editing shared code — other agents keep off until the marker is edited to done/removed. |
 | `→ 💬 <note>` | Human feedback on an item — an instruction to the agents. The board adds one via the 💬 button. |
 
+**Stamps**: agents end every marker with the time — `· HH:MM` (24-hour) — and refresh their
+in-progress marker's stamp every ~10 minutes while working. Updating your own stamp is the one
+allowed edit to an existing marker. The board turns stamps into liveness dots (● active now /
+○ last seen 3h ago), which is also how stale claims from crashed agents get spotted.
+
 ## The file set
 
 Only `checklist.md` is required — the board opens any lone .md. The rest are conventions that

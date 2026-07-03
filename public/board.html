@@ -145,6 +145,10 @@
   }
   #agents .edit-roles:hover { color: var(--text); border-color: var(--accent); }
   #agents .role { flex-shrink: 0; color: var(--text); font-size: 12.5px; }
+  #agents .live { flex-shrink: 0; font-size: 11px; }
+  #agents .live.on { color: var(--green); }
+  #agents .live.warm { color: var(--amber); }
+  #agents .live.off { color: var(--subtext); }
   #agents .what.free { font-style: italic; opacity: 0.7; }
   #agents .legend { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
   #agents .legend .g { color: var(--green); }
@@ -229,6 +233,9 @@
     <p><strong>You pick the roles</strong> — the <code>Rules:</code> line at the top of the
     checklist says who does what (e.g. <code>roles: Fable = planner · Codex = coder</code>).
     It's plain text: click it and rewrite it anytime; agents follow it.</p>
+    <p><strong>Activity dots</strong> — agents end each marker with the time
+    (<code>· 14:32</code>) and refresh it while working; the crew strip turns that into
+    ● active now / ● 25m ago / ○ last seen 3h ago. No dot = the file has no stamps yet.</p>
     <p><strong>Any number of agents can ride</strong> — but names must be unique. Two copies of
     the same agent get numbered names (<code>Codex-1</code>, <code>Codex-2</code>) in their
     kickoff lines; each gets its own badge and lane.</p>
@@ -365,8 +372,8 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
 
 ## 3 · Later (parked, no action now)
 
-- [ ]  Dark-mode pass on the marketing pages → 🤖 Codex: in progress — auditing which pages hardcode colors
-- [ ]  Replace hero video with a lighter animation ⚠️ HOLD Fable nav.css — shared with the header work
+- [ ]  Dark-mode pass on the marketing pages → 🤖 Codex: in progress — auditing which pages hardcode colors · {{T_NOW}}
+- [ ]  Replace hero video with a lighter animation ⚠️ HOLD Fable nav.css — shared with the header work · {{T_OLD}}
 - [ ]  Newsletter signup A/B test
 `;
 
@@ -449,6 +456,13 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       if (!busy.has(who)) busy.set(who, []);
       busy.get(who).push(what);
     };
+    const minutesAgo = (h, m) => {
+      const now = new Date();
+      let diff = now.getHours() * 60 + now.getMinutes() - (h * 60 + m);
+      if (diff < 0) diff += 1440;
+      return diff;
+    };
+    const seen = new Map();
     let lastItem = '';
     for (const line of lines) {
       const im = line.match(/^\s*- \[[ xX]\]\s*(.*)$/);
@@ -461,6 +475,10 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
       }
       for (const h of line.matchAll(/⚠️ HOLD (\S+) ([^·→]*)/g)) {
         add(h[1], 'HOLD: ' + h[2].trim());
+      }
+      for (const t of line.matchAll(/(?:🤖|HOLD) (\S+)[:\s][^→]*?· (\d{1,2}):(\d{2})/gu)) {
+        const mins = minutesAgo(+t[2], +t[3]);
+        if (!seen.has(t[1]) || mins < seen.get(t[1])) seen.set(t[1], mins);
       }
     }
     const roles = new Map();
@@ -478,10 +496,20 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
     const lanes = names.map((who) => {
       const items = busy.get(who);
       const role = roles.get(who);
+      const ago = seen.get(who);
+      const live =
+        ago === undefined
+          ? ''
+          : ago <= 12
+            ? '<span class="live on">● active now</span>'
+            : ago <= 60
+              ? `<span class="live warm">● ${ago}m ago</span>`
+              : `<span class="live off">○ last seen ${Math.round(ago / 60)}h ago</span>`;
       return `
       <div class="lane">
         <span class="who"><span class="pill" style="background:${agentColor(who)}">🤖 ${escapeHtml(who)}</span></span>
         ${role ? `<span class="role">${escapeHtml(role)}</span>` : ''}
+        ${live}
         <span class="what${items ? '' : ' free'}">${
           items ? 'now: ' + escapeHtml(items.join('  ·  ')) : 'free — will claim the next item that fits'
         }</span>
@@ -914,7 +942,11 @@ name is yours.
   setInterval(() => { void refresh().catch(() => {}); }, 2000);
 
   if (DEMO) {
-    demoText = DEMO_MD;
+    const stamp = (minsAgo) => {
+      const d = new Date(Date.now() - minsAgo * 60000);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+    demoText = DEMO_MD.replaceAll('{{T_NOW}}', stamp(3)).replaceAll('{{T_OLD}}', stamp(190));
     $('rawBtn').hidden = false;
     if (!window.showOpenFilePicker) {
       $('open').disabled = true;
