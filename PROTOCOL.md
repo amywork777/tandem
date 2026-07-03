@@ -6,7 +6,8 @@ that safe and legible.
 ## Ownership
 
 - **Only humans check boxes or cross items out.** A checked or crossed item is settled: agents
-  never resurface, re-open, or re-add it.
+  never resurface, re-open, or re-add it. **A checkmark with no comment = accepted as-is** —
+  feedback (`→ 💬`) is only for when something needs changing.
 - **Agents only append.** An agent responds to an item by appending an attributed marker to that
   item's line (or a new line directly under it) — never by rewriting the human's words.
 - Humans may write feedback anywhere, in any form. The `→ 💬 <note>` marker is the standard

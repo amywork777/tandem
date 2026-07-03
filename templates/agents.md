@@ -6,7 +6,8 @@ whole file before touching anything.
 1. **The checklist is the single source of truth.** Read it before starting; re-read it
    immediately before every write.
 2. **Only the human checks boxes or crosses items out.** Settled items are settled — never
-   resurface or re-add them.
+   resurface or re-add them. A checkmark with no comment = accepted as-is; don't wait for
+   feedback on checked items.
 3. **Human feedback** appears on items as `→ 💬 <note>` (or any inline note addressed to
    you) — treat it as a work order and respond under the same item.
 4. **Append, don't rewrite.** Respond to an item by appending a marker to its line:
