@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>tandem — a shared checklist for you and your AI agents</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="One markdown file on your machine, worked by you and your AI agents together under a simple protocol." />
+<style>
+  :root {
+    --bg: #141517;
+    --surface: #1d1e21;
+    --surface2: #26272b;
+    --text: #e8e8ea;
+    --subtext: #9a9ba1;
+    --accent: #6650fa;
+    --green: #4fc07a;
+    --amber: #e0a83c;
+    --red: #e06060;
+    --border: #303136;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main { max-width: 720px; margin: 0 auto; padding: 64px 24px 80px; }
+  a { color: var(--accent); }
+  .hero h1 { font-size: 40px; margin: 0 0 6px; letter-spacing: -0.5px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { font-size: 17px; color: var(--subtext); margin: 0 0 26px; max-width: 56ch; }
+  .cta { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; background: var(--accent); color: #fff; text-decoration: none;
+    padding: 10px 22px; border-radius: 10px; font-weight: 600; font-size: 15px;
+  }
+  .btn.secondary { background: var(--surface2); color: var(--text); font-weight: 500; }
+  .note { color: var(--subtext); font-size: 12.5px; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--subtext); margin: 56px 0 18px; }
+  ol.steps { list-style: none; counter-reset: step; margin: 0; padding: 0; display: grid; gap: 12px; }
+  ol.steps li {
+    counter-increment: step; display: flex; gap: 14px; align-items: baseline;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px;
+  }
+  ol.steps li::before {
+    content: counter(step); flex-shrink: 0;
+    width: 24px; height: 24px; border-radius: 8px; background: var(--surface2);
+    color: var(--accent); font-weight: 700; font-size: 13px;
+    display: grid; place-items: center; transform: translateY(4px);
+  }
+  ol.steps b { display: block; }
+  ol.steps span { color: var(--subtext); font-size: 13.5px; }
+  .board-demo {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px; font-size: 13px; display: grid; gap: 6px; overflow-x: auto;
+  }
+  .demo-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px;
+    min-width: 0;
+  }
+  .demo-box {
+    flex-shrink: 0; width: 15px; height: 15px; border-radius: 5px; margin-top: 3px;
+    border: 1.5px solid var(--subtext);
+  }
+  .demo-box.checked { background: var(--accent); border-color: var(--accent); position: relative; }
+  .demo-box.checked::after {
+    content: ""; position: absolute; left: 3px; top: 3px; width: 7px; height: 4px;
+    border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg);
+  }
+  .demo-item.done-item { opacity: 0.55; }
+  .demo-item.done-item .t { text-decoration: line-through; }
+  .m-done { color: var(--green); }
+  .m-prog { color: var(--amber); }
+  .m-q { color: var(--red); }
+  .fine { color: var(--subtext); font-size: 13.5px; }
+  footer { margin-top: 64px; color: var(--subtext); font-size: 12.5px; border-top: 1px solid var(--border); padding-top: 18px; }
+  @media (prefers-color-scheme: light) { /* deliberate single-theme: the board is dark, the product is dark */ }
+</style>
+</head>
+<body>
+<main>
+  <div class="hero">
+    <h1><span>tandem</span></h1>
+    <p>A shared checklist between you and your AI agents — one markdown file, on your machine,
+    that everyone reads and writes. Agents leave attributed markers; you check the boxes.</p>
+    <div class="cta">
+      <a class="btn" href="/board">Open the board</a>
+      <a class="btn secondary" href="/protocol">Read the protocol</a>
+      <span class="note">Chromium browsers only (Chrome, Edge, Arc) — the board edits local files.</span>
+    </div>
+  </div>
+
+  <h2>How it works</h2>
+  <ol class="steps">
+    <li><div><b>Start from notes</b>
+      <span>A meeting transcript, a brain-dump, a plan — anything. Your AI distills it into a
+      checklist file (or click "New checklist" on the board for a blank one).</span></div></li>
+    <li><div><b>The file is the board</b>
+      <span>One <code>checklist.md</code> in a project folder, with <code>decisions.md</code>,
+      <code>archive.md</code>, and <code>agents.md</code> beside it. No server — it lives on your machine.</span></div></li>
+    <li><div><b>Agents work it under rules</b>
+      <span>Point any agent (Claude, Codex, …) at <code>agents.md</code>. They claim items with
+      in-progress markers, report with done markers, and ask you questions with ❓ — never touching
+      your checkboxes.</span></div></li>
+    <li><div><b>You verify in the browser</b>
+      <span>The board re-reads the file every couple of seconds: agent updates just appear. Check
+      what you've verified, cross out what's dead, type feedback right on an item.</span></div></li>
+  </ol>
+
+  <h2>What the board looks like</h2>
+  <div class="board-demo">
+    <div class="demo-item done-item"><div class="demo-box checked"></div>
+      <div class="t">Fix login redirect loop <span class="m-done">→ 🤖 Fable: done — root cause was a stale cookie guard, commit 41c9a2</span></div></div>
+    <div class="demo-item"><div class="demo-box"></div>
+      <div>Empty-state illustration for the dashboard <span class="m-prog">→ 🤖 Codex: in progress — building the SVG variants</span></div></div>
+    <div class="demo-item"><div class="demo-box"></div>
+      <div>🔴 Pricing page copy <span class="m-q">→ ❓ Fable: two tones drafted — playful or corporate?</span></div></div>
+  </div>
+  <p class="fine">Green = done, awaiting your check · amber = claimed and in flight · red = a
+  question waiting for you. The "who's on what" strip at the top of the board is derived live
+  from these markers.</p>
+
+  <h2>For your AI</h2>
+  <p class="fine">Every project folder gets an <code>agents.md</code> — operating instructions any
+  agent can follow (marker grammar, write safety, what it may and may not touch). Just tell your
+  agent: <em>"read agents.md in this folder first."</em> Templates, the full protocol, and a
+  Claude Code skill live in the repo.</p>
+
+  <footer>
+    tandem · local-first, no accounts, no tracking · <a href="/protocol">protocol</a>
+  </footer>
+</main>
+</body>
+</html>

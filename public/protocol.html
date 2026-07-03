@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>tandem — the protocol</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    --bg: #141517; --surface: #1d1e21; --surface2: #26272b;
+    --text: #e8e8ea; --subtext: #9a9ba1; --accent: #6650fa; --border: #303136;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; }
+  main { max-width: 680px; margin: 0 auto; padding: 48px 24px 80px; }
+  a { color: var(--accent); }
+  h1 { font-size: 28px; margin: 0 0 4px; }
+  .lede { color: var(--subtext); margin: 0 0 36px; }
+  h2 { font-size: 17px; margin: 36px 0 10px; }
+  p, li { color: var(--subtext); }
+  p strong, li strong { color: var(--text); }
+  code { background: var(--surface2); border-radius: 5px; padding: 1px 5px; font-size: 12.5px; color: var(--text); }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  .table-wrap { overflow-x: auto; }
+  th, td { text-align: left; padding: 8px 10px; border: 1px solid var(--border); vertical-align: top; }
+  th { background: var(--surface); color: var(--text); font-weight: 600; }
+  td { color: var(--subtext); }
+  td code { white-space: nowrap; }
+  nav { margin-bottom: 28px; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <nav><a href="/">← tandem</a> · <a href="/board">open the board</a></nav>
+  <h1>The tandem protocol</h1>
+  <p class="lede">One markdown file is the board. Humans and AI agents all read and write it;
+  these rules keep that safe and legible.</p>
+
+  <h2>Ownership</h2>
+  <ul>
+    <li><strong>Only humans check boxes or cross items out.</strong> A checked or crossed item is
+      settled: agents never resurface, re-open, or re-add it.</li>
+    <li><strong>Agents only append.</strong> An agent responds to an item by appending an
+      attributed marker to that item's line (or a new line directly under it) — never by
+      rewriting the human's words.</li>
+    <li>Humans may write feedback anywhere, in any form. Inline notes addressed to an agent
+      (e.g. "AMY: make the toast clearer") are work orders.</li>
+  </ul>
+
+  <h2>Markers (exact grammar)</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Marker</th><th>Meaning</th></tr>
+    <tr><td><code>→ 🤖 Name: in progress — &lt;what&gt;</code></td><td>Claim + lock. One agent per item.</td></tr>
+    <tr><td><code>→ 🤖 Name: done — &lt;what, commit/link&gt;</code></td><td>Work finished, awaiting human verification.</td></tr>
+    <tr><td><code>→ ❓ Name: &lt;question&gt;</code></td><td>Blocked on the human. Rendered red; humans scan for these.</td></tr>
+    <tr><td><code>⚠️ HOLD Name &lt;file or topic&gt;</code></td><td>Editing shared code — other agents keep off until the marker is edited to done/removed.</td></tr>
+  </table></div>
+
+  <h2>The file set</h2>
+  <div class="table-wrap"><table>
+    <tr><th>File</th><th>Holds</th></tr>
+    <tr><td><code>checklist.md</code></td><td>Live work only, three sections: <strong>Verify</strong> (done, awaiting human check) · <strong>Discuss</strong> (needs a human/team decision) · <strong>Later</strong> (parked).</td></tr>
+    <tr><td><code>decisions.md</code></td><td>Every decision, numbered, with the WHY.</td></tr>
+    <tr><td><code>archive.md</code></td><td>Append-only history. Move done detail here to keep the checklist short.</td></tr>
+    <tr><td><code>agents.md</code></td><td>Operating instructions for any agent joining the project. Point new agents here first.</td></tr>
+  </table></div>
+
+  <h2>Division of labor</h2>
+  <p>Architectural or risky items go to the stronger agent; self-contained items to the other.
+  The in-progress marker IS the claim — no separate assignment step. One agent per item.</p>
+
+  <h2>Write safety</h2>
+  <p>The file is hot: the board and other agents write it while you work.</p>
+  <ul>
+    <li>Re-read the file immediately before every write.</li>
+    <li>Write atomically (temp file + rename), replacing the whole file only with content
+      derived from that fresh read.</li>
+    <li>Never regenerate the file from your memory of it — human checkbox states are sacred.</li>
+  </ul>
+
+  <h2>Sources in, status out</h2>
+  <p>Meeting notes and transcripts flow IN to the checklist. Outward status (Linear, Notion,
+  Slack) is generated FROM the checklist when the human asks — never maintained in parallel.</p>
+</main>
+</body>
+</html>
