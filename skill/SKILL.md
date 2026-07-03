@@ -13,6 +13,9 @@ Two flows. Pick by what the user asked for.
 
 ## Flow 1: `new` — start a project from notes
 
+For a quick one-day task, a lone `checklist.md` is enough — skip the siblings and steps 3–4's
+extra files. The full four-file set below is for projects that will live a while.
+
 1. **Gather source material.** If the user named a Granola meeting, pull it with the Granola
    tools. If they pasted notes or named a file, use that. If nothing given, ask what the
    project is about (one question).
@@ -70,10 +73,11 @@ writes it when the human edits, and other agents append to it. Therefore:
   Edit/Write tool whose read snapshot may be seconds stale.
 - Never regenerate the file from memory — the human's checkbox states are sacred.
 
-**Housekeeping**: decisions (with the WHY) go to `decisions.md`, numbered, append-only.
-When the human checks a Verify item, its full detail can move to `archive.md` to keep the
-checklist short. Outward status (Linear/Notion/Slack) is generated FROM the checklist when
-asked — never maintained in parallel.
+**Housekeeping**: only `checklist.md` is required — work with whichever sibling files
+actually exist. If the project keeps a `decisions.md`, decisions (with the WHY) go there,
+numbered, append-only; if it keeps an `archive.md`, a checked Verify item's detail moves
+there to keep the checklist short. Outward status (Linear/Notion/Slack) is generated FROM
+the checklist when asked — never maintained in parallel.
 
 ## Template shapes (fallback if the repo isn't on this machine)
 

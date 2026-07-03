@@ -232,9 +232,9 @@
     kickoff lines; each gets its own badge and lane.</p>
     <p><strong>Checked items sink</strong> to the bottom of their section (display only — the
     file keeps your order).</p>
-    <p><strong>Files</strong> — <code>checklist.md</code> (Verify / Discuss / Later),
-    <code>decisions.md</code> (the why), <code>archive.md</code> (history),
-    <code>agents.md</code> (point new agents here first).</p>
+    <p><strong>Files</strong> — only <code>checklist.md</code> is required (any lone .md
+    works). Bigger projects add <code>decisions.md</code> (the why), <code>archive.md</code>
+    (history), and <code>agents.md</code> (point new agents here first).</p>
     <p><strong>Write safety</strong> — the file is hot: agents re-read before every write and
     write atomically. Your checkbox states are sacred.</p>
     <p><a href="/protocol">Full protocol →</a></p>
@@ -819,8 +819,10 @@ name is yours.
    (e.g. planner vs coder) — follow it, and re-read it each session (the human may reassign).
    If no roles are named: architectural/risky → the stronger agent; self-contained → the
    other. If unsure, ask via \`→ ❓\`.
-8. Decisions (with the WHY) go to \`decisions.md\`, numbered. Finished detail moves to
-   \`archive.md\`. Keep the checklist short.
+8. Work with whichever sibling files exist — only \`checklist.md\` is guaranteed. If the
+   project keeps a \`decisions.md\`, decisions (with the WHY) go there, numbered; if it keeps
+   an \`archive.md\`, finished detail moves there so the checklist stays short. Never invent
+   files the human didn't set up.
 `,
   };
 

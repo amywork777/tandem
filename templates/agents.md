@@ -26,5 +26,7 @@ name is yours.
    (e.g. planner vs coder) — follow it, and re-read it each session (the human may reassign).
    If no roles are named: architectural/risky → the stronger agent; self-contained → the
    other. If unsure, ask via `→ ❓`.
-8. Decisions (with the WHY) go to `decisions.md`, numbered. Finished detail moves to
-   `archive.md`. Keep the checklist short.
+8. Work with whichever sibling files exist — only `checklist.md` is guaranteed. If the
+   project keeps a `decisions.md`, decisions (with the WHY) go there, numbered; if it keeps
+   an `archive.md`, finished detail moves there so the checklist stays short. Never invent
+   files the human didn't set up.

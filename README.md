@@ -35,6 +35,8 @@ your own disk (File System Access API).
 - **Templates**: `templates/` — also inlined in the board's New-checklist button
   (`// sync: templates/` marker in board.html; regenerate rather than hand-edit).
 - **Sample**: open `sample/checklist.md` in the board to try everything.
+- **Travel light**: only `checklist.md` is required — the board opens any lone .md.
+  `decisions.md` / `archive.md` / `agents.md` are conventions that pay off on longer projects.
 
 ## The protocol, in one breath
 
