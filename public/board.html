@@ -298,6 +298,7 @@
   let lastInputAt = 0;
   let rawMode = false;
 
+  const DEMO = new URLSearchParams(location.search).has('demo');
   if (!window.showOpenFilePicker && !DEMO) {
     $('empty').innerHTML =
       '<h2>Browser not supported</h2><p>The board needs the File System Access API — ' +
@@ -386,7 +387,6 @@
       );
 
   // /board?demo — the real board over an in-memory file; nothing persists.
-  const DEMO = new URLSearchParams(location.search).has('demo');
   let demoText = null;
   let demoRendered = false;
   const DEMO_MD = `# Tandem Demo
