@@ -132,9 +132,18 @@
   }
   #agents .rule { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
   #agents .strip-label {
+    display: flex; align-items: center; gap: 10px;
     color: var(--subtext); font-size: 10px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.09em;
   }
+  #agents .edit-roles {
+    margin-left: auto; background: none; border: 1px solid var(--border);
+    color: var(--subtext); padding: 1px 8px; border-radius: 6px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 0; text-transform: none;
+  }
+  #agents .edit-roles:hover { color: var(--text); border-color: var(--accent); }
+  #agents .role { flex-shrink: 0; color: var(--text); font-size: 12.5px; }
+  #agents .what.free { font-style: italic; opacity: 0.7; }
   #agents .legend { color: var(--subtext); font-size: 11.5px; border-top: 1px solid var(--border); padding-top: 6px; margin-top: 2px; }
   #agents .legend .g { color: var(--green); }
   #agents .legend .a { color: var(--amber); }
@@ -428,7 +437,8 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
     });
   };
 
-  // "Who's on what" strip: agent names derived live from the markers in the file.
+  // The crew panel: roles parsed from the Rules: line, live activity from the
+  // markers — one row per agent, whether or not it's mid-task.
   const renderAgents = (lines) => {
     const busy = new Map();
     const add = (who, what) => {
@@ -442,25 +452,53 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         add(h[1], 'HOLD: ' + h[2].trim());
       }
     }
-    const lanes = [...busy.entries()].map(
-      ([who, items]) => `
+    const roles = new Map();
+    const ruleLine = lines.find((l) => l.startsWith('Rules:'));
+    if (ruleLine) {
+      const rolesPart = ruleLine.match(/roles?:(.*)$/i);
+      if (rolesPart) {
+        for (const part of rolesPart[1].split('·')) {
+          const rm = part.match(/([\w-]+)\s*=\s*(.*)/);
+          if (rm) roles.set(rm[1], rm[2].replace(/[.\s]+$/, '').trim());
+        }
+      }
+    }
+    const names = [...new Set([...roles.keys(), ...busy.keys()])];
+    const lanes = names.map((who) => {
+      const items = busy.get(who);
+      const role = roles.get(who);
+      return `
       <div class="lane">
-        <span class="who"><span class="pill" style="background:${agentColor(who)}">${escapeHtml(who)}</span></span>
-        <span class="what">${escapeHtml(items.join('  ·  '))}</span>
-      </div>`
-    );
-    // The division-of-labor rule line comes from the file itself (template header).
-    const rule = lines.find((l) => l.startsWith('Rules:'));
+        <span class="who"><span class="pill" style="background:${agentColor(who)}">🤖 ${escapeHtml(who)}</span></span>
+        ${role ? `<span class="role">${escapeHtml(role)}</span>` : ''}
+        <span class="what${items ? '' : ' free'}">${
+          items ? 'now: ' + escapeHtml(items.join('  ·  ')) : 'free — will claim the next item that fits'
+        }</span>
+      </div>`;
+    });
     $('agents').innerHTML =
-      `<div class="strip-label">Who's on what</div>` +
+      `<div class="strip-label">The crew — who does what` +
+      (ruleLine ? `<button class="edit-roles">✎ edit roles</button>` : '') +
+      `</div>` +
       (lanes.join('') ||
-        '<div class="lane"><span class="what">no agents working right now</span></div>') +
-      (rule ? `<div class="rule">${escapeHtml(rule)}</div>` : '') +
+        '<div class="lane"><span class="what free">no agents yet — name roles on the Rules: line, e.g. roles: Fable = planner · Codex = coder</span></div>') +
       `<div class="legend">☑ your check = accepted, done · ` +
       `<span class="y">💬 your feedback</span> · ` +
       `<span class="g">green = finished, waiting on your check</span> · ` +
       `<span class="a">amber = in progress</span> · ` +
       `<span class="r">red = needs your answer</span></div>`;
+    const editBtn = $('agents').querySelector('.edit-roles');
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        for (const el of document.querySelectorAll('#doc .editable')) {
+          if (cleanText(el).startsWith('Rules:')) {
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            el.focus();
+            break;
+          }
+        }
+      });
+    }
     $('agents').hidden = rawMode;
   };
 
