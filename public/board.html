@@ -65,11 +65,17 @@
   h2.md .count.clear { color: var(--green); }
   hr.md { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
   .add-task {
-    display: block; width: 100%; text-align: left; margin: 6px 0 0;
-    background: none; border: 1px dashed var(--border); color: var(--subtext);
-    padding: 7px 12px; border-radius: 10px; font-size: 13px; cursor: pointer;
+    display: block; width: 100%; text-align: left; margin: 8px 0 0;
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 1.5px dashed color-mix(in srgb, var(--accent) 55%, transparent);
+    color: #b9adff; font-weight: 600;
+    padding: 10px 14px; border-radius: 10px; font-size: 13.5px; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
   }
-  .add-task:hover { color: var(--text); border-color: var(--accent); }
+  .add-task:hover {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    border-color: var(--accent); color: #fff;
+  }
   h1.md { font-size: 20px; font-weight: 700; margin: 8px 0 12px; }
   p.md { color: var(--subtext); font-size: 12.5px; margin: 4px 0; opacity: 0.8; }
   .item {
@@ -720,7 +726,7 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           const addMeta = { index: lastNonBlank, original: lines[lastNonBlank] };
           const addBtn = document.createElement('button');
           addBtn.className = 'add-task';
-          addBtn.textContent = '+ add task';
+          addBtn.textContent = '＋ Add task';
           addBtn.addEventListener('click', async () => {
             const at = await spliceLines(addMeta, 0, ['- [ ]  🔨 ']);
             if (at !== -1) {
