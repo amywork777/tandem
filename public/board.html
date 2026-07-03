@@ -81,9 +81,16 @@
   .marker.feedback { color: var(--accent); }
   .item .fb {
     background: none; border: 0; padding: 0 2px; cursor: pointer;
-    font-size: 13px; line-height: 1.4; opacity: 0; flex-shrink: 0;
+    font-size: 13px; line-height: 1.4; opacity: 0.4; flex-shrink: 0;
   }
-  .item:hover .fb, .item .fb:focus { opacity: 0.65; }
+  .item:hover .fb, .item .fb:focus { opacity: 1; }
+  .fb-row { display: flex; gap: 8px; margin: 2px 0 8px 39px; }
+  .fb-row input {
+    flex: 1; min-width: 0; background: var(--surface2); color: var(--text);
+    border: 1px solid var(--accent); border-radius: 8px; padding: 7px 10px;
+    font: inherit; font-size: 13px; outline: none;
+  }
+  .fb-row input::placeholder { color: var(--subtext); }
   #agents {
     display: flex; flex-direction: column; gap: 6px;
     margin: 14px 0 4px; padding: 10px 14px;
@@ -396,15 +403,34 @@
         fb.title = 'Add feedback for the agents';
         fb.textContent = '💬';
         fb.addEventListener('click', () => {
-          text.textContent = cleanText(text) + ' → 💬 ';
-          text.focus();
-          const range = document.createRange();
-          range.selectNodeContents(text);
-          range.collapse(false);
-          const sel = getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-          lastInputAt = Date.now();
+          const existing = row.nextElementSibling;
+          if (existing && existing.classList.contains('fb-row')) {
+            existing.querySelector('input').focus();
+            return;
+          }
+          const wrap = document.createElement('div');
+          wrap.className = 'fb-row';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.placeholder = 'Feedback for the agents — Enter to add · Esc to cancel';
+          const send = document.createElement('button');
+          send.textContent = 'Add 💬';
+          const submit = async () => {
+            const note = input.value.trim();
+            wrap.remove();
+            if (!note) return;
+            await replaceLine(meta, lineFor(box.checked) + ' → 💬 ' + note);
+            lastModified = 0;
+            await refresh(true);
+          };
+          send.addEventListener('click', () => void submit());
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); void submit(); }
+            if (e.key === 'Escape') wrap.remove();
+          });
+          wrap.append(input, send);
+          row.after(wrap);
+          input.focus();
         });
         row.append(box, text, fb);
         if (box.checked) checkedRows.push(row);
