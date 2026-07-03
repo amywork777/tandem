@@ -43,6 +43,10 @@ named, the default applies: architectural or risky items go to the stronger agen
 self-contained items to the other. The in-progress marker IS the claim — no separate
 assignment step. One agent per item.
 
+Any number of agents can ride, but **names must be unique**: running two copies of the same
+agent means numbered names (`Codex-1`, `Codex-2`) in their kickoff messages — otherwise their
+claims collide and an agent may mistake a sibling's markers for its own.
+
 ## Write safety
 
 The file is hot: the board and other agents write it while you work.
