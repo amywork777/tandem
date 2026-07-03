@@ -42,5 +42,8 @@ setTimeout(() => {
   const strip = (els.agents && els.agents._html) || '';
   if (items < 10) { console.error('RENDER FAILED — only', items, 'nodes'); process.exit(1); }
   if (!strip.includes('crew')) { console.error('STRIP FAILED'); process.exit(1); }
-  console.log('SMOKE OK —', items, 'nodes rendered, strip populated');
+  try {
+    require('child_process').execFileSync('node', [__dirname + '/sync-templates.js', '--check']);
+  } catch { console.error('TEMPLATE DRIFT'); process.exit(1); }
+  console.log('SMOKE OK —', items, 'nodes rendered, strip populated, templates in sync');
 }, 150);
