@@ -686,10 +686,6 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
         const [, pre, state, post] = item;
         const row = document.createElement('div');
         row.className = 'item' + (state !== ' ' ? ' checked' : '');
-        if (state === ' ') {
-          if (lastMark.startsWith('❓')) row.className += ' ask';
-          else if (/^🤖 \S+: done/u.test(lastMark)) row.className += ' ready';
-        }
         row.dataset.idx = index;
         const box = document.createElement('input');
         box.type = 'checkbox';
@@ -708,6 +704,10 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
           (m) => m[1]
         );
         const lastMark = marks[marks.length - 1] || '';
+        if (state === ' ') {
+          if (lastMark.startsWith('❓')) row.classList.add('ask');
+          else if (/^🤖 \S+: done/u.test(lastMark)) row.classList.add('ready');
+        }
         const text = document.createElement('div');
         text.className = 'editable main';
         text.contentEditable = 'plaintext-only';
