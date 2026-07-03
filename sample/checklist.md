@@ -19,5 +19,5 @@ Rules: only humans check boxes · agents append attributed markers · roles: Fab
 
 ## 3 · Later (parked, no action now)
 
-- [ ]  Dark-mode pass on the marketing pages
+- [ ]  Dark-mode pass on the marketing pages → 🤖 Codex: in progress — auditing which pages hardcode colors · 14:32
 - [ ]  Replace hero video with a lighter animation ⚠️ HOLD Fable nav.css — shared with the header work, keep off until released

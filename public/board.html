@@ -886,15 +886,19 @@ name is yours.
    item), \`→ 🤖 <YourName>: done — <what, commit/link>\` when finished,
    \`→ ❓ <YourName>: <question>\` when blocked on the human. Never leave a comment anywhere
    except on or directly under its item.
-5. **Shared code:** add \`⚠️ HOLD <YourName> <file/topic>\` while editing files another agent may
+5. **Stamps:** end every marker with the time — \`· HH:MM\` (24-hour, e.g. \`· 14:32\`) — and
+   while working a long item, refresh your in-progress marker's stamp every ~10 minutes.
+   Updating your own stamp is the one allowed edit to an existing marker; it's how the human
+   sees you're alive.
+6. **Shared code:** add \`⚠️ HOLD <YourName> <file/topic>\` while editing files another agent may
    touch; edit it away when done. Respect others' HOLDs.
-6. **Write safety:** the file is hot (a browser board and other agents write it). Write
+7. **Write safety:** the file is hot (a browser board and other agents write it). Write
    atomically (temp file + rename) from a fresh read. Never regenerate the file from memory.
-7. **Division of labor:** the \`Rules:\` line at the top of \`checklist.md\` assigns roles
+8. **Division of labor:** the \`Rules:\` line at the top of \`checklist.md\` assigns roles
    (e.g. planner vs coder) — follow it, and re-read it each session (the human may reassign).
    If no roles are named: architectural/risky → the stronger agent; self-contained → the
    other. If unsure, ask via \`→ ❓\`.
-8. Work with whichever sibling files exist — only \`checklist.md\` is guaranteed. If the
+9. Work with whichever sibling files exist — only \`checklist.md\` is guaranteed. If the
    project keeps a \`decisions.md\`, decisions (with the WHY) go there, numbered; if it keeps
    an \`archive.md\`, finished detail moves there so the checklist stays short. Never invent
    files the human didn't set up.
